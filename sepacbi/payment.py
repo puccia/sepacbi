@@ -52,7 +52,7 @@ class Payment(AttributeCarrier):
     of transactions to be performed.
     """
     allowed_args = (
-        'id', 'batch', 'high_priority', 'execution_date',
+        'req_id', 'batch', 'high_priority', 'execution_date',
         'debtor', 'account', 'abi', 'ultimate_debtor', 'charges_account',
         'envelope', 'initiator')
 
@@ -73,9 +73,9 @@ class Payment(AttributeCarrier):
     def add_transaction(self, **kwargs):
         "Adds a transaction to the internal list. Does not return anything."
         kwargs['payment_seq'] = len(self.transactions)+1
-        if not hasattr(self, 'id'):
+        if not hasattr(self, 'req_id'):
             self.gen_id()
-        kwargs['payment_id'] = self.id
+        kwargs['payment_id'] = self.req_id
         kwargs['register_eeid_function'] = self.add_eeid
         txr = Transaction(**kwargs)
         txr.perform_checks()
@@ -83,14 +83,14 @@ class Payment(AttributeCarrier):
 
     def gen_id(self):
         """Generate a unique ID for the payment"""
-        self.id = '%s%s' % (self.ID_PREFIX, datetime.now().strftime(
+        self.req_id = '%s%s' % (self.ID_PREFIX, datetime.now().strftime(
             '%Y%m%d-%H%M%S'))
 
     def perform_checks(self):
         "Checks the validity of all supplied attributes."
-        if not hasattr(self, 'id'):
+        if not hasattr(self, 'req_id'):
             self.gen_id()
-        self.max_length('id', 35)
+        self.max_length('req_id', 35)
 
         assert isinstance(self.debtor, IdHolder)
 
@@ -153,7 +153,7 @@ class Payment(AttributeCarrier):
 
         # Header
         header = etree.SubElement(root, 'GrpHdr', nsmap={None: xmlns})
-        etree.SubElement(header, 'MsgId').text = self.id
+        etree.SubElement(header, 'MsgId').text = self.req_id
         etree.SubElement(header, 'CreDtTm').text = datetime.now().isoformat()
         etree.SubElement(header, 'NbOfTxs').text = str(len(self.transactions))
         etree.SubElement(header, 'CtrlSum').text = str(sum([
@@ -168,7 +168,7 @@ class Payment(AttributeCarrier):
         info = etree.SubElement(root, 'PmtInf', nsmap={None: xmlns})
 
         # TRF: no status requested
-        etree.SubElement(info, 'PmtInfId').text = self.id
+        etree.SubElement(info, 'PmtInfId').text = self.req_id
         etree.SubElement(info, 'PmtMtd').text = 'TRF'
 
         # Batch booking

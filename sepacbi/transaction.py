@@ -33,7 +33,7 @@ class Transaction(AttributeCarrier):
     # pylint: disable=no-member
 
     allowed_args = (
-        'id', 'eeid', 'category', 'rmtinfo', 'amount',
+        'tx_id', 'eeid', 'category', 'rmtinfo', 'amount',
         'ultimate_debtor', 'bic', 'account', 'creditor', 'ultimate_creditor',
         'docs', 'purpose', 'payment_seq', 'payment_id',
         'register_eeid_function')
@@ -45,7 +45,7 @@ class Transaction(AttributeCarrier):
 
     def gen_id(self):
         "Generate a sequential ID, if not supplied, for the `InstrId` element."
-        self.id = str(self.payment_seq)
+        self.tx_id = str(self.payment_seq)
 
     def gen_eeid(self):
         "Generate a unique ID for the `EndToEndId` element."
@@ -55,9 +55,9 @@ class Transaction(AttributeCarrier):
         "Check lengths and types for the attributes."
         # pylint: disable=access-member-before-definition
         # pylint: disable=attribute-defined-outside-init
-        if not hasattr(self, 'id'):
+        if not hasattr(self, 'tx_id'):
             self.gen_id()
-        self.max_length('id', 35)
+        self.max_length('tx_id', 35)
 
         if not hasattr(self, 'eeid'):
             self.gen_eeid()
@@ -98,7 +98,7 @@ class Transaction(AttributeCarrier):
         """
         root = etree.Element('CdtTrfTxInf')
         pmtid = etree.SubElement(root, 'PmtId')
-        etree.SubElement(pmtid, 'InstrId').text = self.id
+        etree.SubElement(pmtid, 'InstrId').text = self.tx_id
         etree.SubElement(pmtid, 'EndToEndId').text = self.eeid
         info = etree.SubElement(root, 'PmtTpInf')
         purp = etree.SubElement(info, 'CtgyPurp')

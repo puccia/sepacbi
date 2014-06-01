@@ -34,16 +34,16 @@ def compare_xml(tree, filename, save=False):
     """
     from os.path import dirname, join
     full_path = join(dirname(__file__), filename)
+    tree = canonicalize_xml(tree)
     if save:
         open(full_path, 'w').write(tree)
         raise Exception('saved!')
-    tree = canonicalize_xml(tree)
     file_content = canonicalize_xml(open(full_path, 'r').read())
     assert tree == file_content
 
 
 def test_payment_basic():
-    payment = Payment(debtor=biz_with_cuc, account=acct_37, id='StaticId',
+    payment = Payment(debtor=biz_with_cuc, account=acct_37, req_id='StaticId',
                       execution_date=date(2014, 5, 15))
     payment.add_transaction(amount=198.25, account=acct_86, creditor=beta,
                             rmtinfo='Causale 1')
@@ -51,7 +51,7 @@ def test_payment_basic():
 
 
 def test_payment_multitrans():
-    payment = Payment(debtor=biz_with_cuc, account=acct_37, id='StaticId',
+    payment = Payment(debtor=biz_with_cuc, account=acct_37, req_id='StaticId',
                       execution_date=date(2014, 5, 15))
     payment.add_transaction(amount=198.25, account=acct_86, creditor=beta,
                             rmtinfo='Causale 1')
@@ -72,7 +72,7 @@ def test_payment_multitrans():
 
 def test_payment_misc_features():
     payment = Payment(
-        debtor=biz, account=acct_37, id='StaticId',
+        debtor=biz, account=acct_37, req_id='StaticId',
         execution_date=date(2014, 5, 15),
         ultimate_debtor=beta, charges_account=acct_86, envelope=True,
         initiator=biz_with_cuc, batch=True, high_priority=True)
