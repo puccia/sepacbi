@@ -1,5 +1,5 @@
 from sepacbi import Payment, Invoice, DebitNote, Text
-from definitions import *
+from .definitions import *
 import re
 import sys
 from datetime import datetime, date

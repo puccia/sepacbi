@@ -9,7 +9,7 @@ from sepacbi.transaction import MissingBICError
 from sepacbi.rmtinfo import Invoice
 from sepacbi.iban import InvalidIBANError
 
-from definitions import *
+from .definitions import *
 
 
 def test_empty_payment():
