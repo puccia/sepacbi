@@ -9,7 +9,7 @@ This is done by specifying a tuple or list of one, or more, instances of these c
 
 	An instance of ``Document`` represents a single commercial document for which the transaction is issued. Its subclasses ``Invoice``, ``CreditNote`` and ``DebitNote`` are used in exactly the same way; only the rendered tag changes.
 
-	..method:: __init__(self, number, amount=None, date=None)
+	.. method:: __init__(self, number, amount=None, date=None)
 
 		.. data:: number
 
