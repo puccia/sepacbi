@@ -177,13 +177,13 @@ class Payment(AttributeCarrier):
 
         # Priority
         if hasattr(self, 'high_priority'):
-            info = etree.SubElement(root, 'PmtTpInf')
+            tp_info = etree.SubElement(info, 'PmtTpInf')
             if hasattr(self, 'high_priority'):
                 priority_text = 'NORM'
                 if self.high_priority:
                     priority_text = 'HIGH'
-                etree.SubElement(info, 'InstrPrty').text = priority_text
-            svclvl = etree.SubElement(info, 'SvcLvl')
+                etree.SubElement(tp_info, 'InstrPrty').text = priority_text
+            svclvl = etree.SubElement(tp_info, 'SvcLvl')
             etree.SubElement(svclvl, 'Cd').text = 'SEPA'
 
         # Execution date: either today or specified date
