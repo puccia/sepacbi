@@ -29,12 +29,14 @@ class MissingABIError(Exception):
     the account.
     """
 
+
 class NoTransactionsError(Exception):
     """
     Raised when trying to generate a credit transfer request containing no
     transactions.
     """
     pass
+
 
 class InvalidEndToEndIDError(Exception):
     """
@@ -219,7 +221,13 @@ class Payment(AttributeCarrier):
         return outer
 
     def xml(self):
+        """
+        Return the lxml tree.
+        """
         return self.__tag__()
 
     def text(self, **kwargs):
+        """
+        Return the XML structure as a string.
+        """
         return etree.tostring(self.xml(), **kwargs)

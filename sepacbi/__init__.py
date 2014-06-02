@@ -14,6 +14,6 @@ from .transaction import Transaction
 
 from lxml import etree
 
-pr_prefix = 'urn:CBI:xsd:CBIPaymentRequest.00.04.00'
+PR_PREFIX = 'urn:CBI:xsd:CBIPaymentRequest.00.04.00'
 
-etree.register_namespace('pr', pr_prefix)
+etree.register_namespace('pr', PR_PREFIX)

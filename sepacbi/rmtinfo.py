@@ -73,6 +73,7 @@ class DebitNote(Document):
 
 class Text(Document):
     "Free text."
+    # pylint: disable=super-init-not-called
     tag = '/TXT/'
 
     def __init__(self, text):

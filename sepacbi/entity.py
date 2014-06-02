@@ -79,6 +79,8 @@ class IdHolder(AttributeCarrier):
         super(IdHolder, self).__init__(**kwargs)
 
     def perform_checks(self):
+        # pylint: disable=access-member-before-definition
+        # pylint: disable=attribute-defined-outside-init
         "Check argument lengths."
         if hasattr(self, 'name'):
             self.max_length('name', 70)
