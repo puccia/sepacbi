@@ -124,10 +124,14 @@ Individual transactions are specified by invoking the ``add_transaction`` method
 Obtaining the XML output
 ------------------------
 
-.. method:: Payment.text()
+.. method:: Payment.xml_text()
 
 	Return a string containing the XML rendering of the credit transfer request.
 
 .. method:: Payment.xml()
 
 	Return ``lxml``'s XML structure for the credit transfer request.
+
+.. method:: Payment.cbi_text()
+
+    Return a string containing a CBI text stream of records according to the CBI-BON-001 technical standard. 

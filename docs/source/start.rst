@@ -3,6 +3,8 @@ Introduction
 
 The `sepacbi` module generates SEPA Credit Transfer requests in the XML format standardized by CBI and accepted by Italian banks.
 
+It is also capable of generating request streams in the legacy CBI-BON-001 fixed-length record legacy format, but only for domestic credit transfers.
+
 The module does not currently support other requests (such as Direct Debit), nor does it support status changes.
 
 The development of this module is funded by `Linkspirit`_.
@@ -31,5 +33,5 @@ Here is the generation of a very simple credit transfer request::
 
 You will the obtain the generated XML request by invoking::
 
-	payment.text()
+	payment.xml_text()
 

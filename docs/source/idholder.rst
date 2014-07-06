@@ -31,3 +31,7 @@ The ``IdHolder`` class
 
 		The CUC is usually communicated by the bank to the customer who wants to issue SEPA credit transfer requests.
 
+	.. data:: sia_code
+
+	   The unique identifier assigned by CBI ("Codice SIA"). It is needed when issuing transfer orders in the CBI text format.
+

@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="sepacbi",
-    version="0.1.2",
+    version="0.1.3",
     description="SEPA Credit Transfer request (CBI) XML generator",
     long_description="{0:s}\n\n".format(
         open("README.rst").read()
@@ -32,6 +32,6 @@ setup(
     keywords="xml finance banking payments",
     platforms="All",
     packages=find_packages("."),
-    install_requires=['lxml'],
+    install_requires=['lxml', 'six', 'unidecode'],
     zip_safe=True
 )

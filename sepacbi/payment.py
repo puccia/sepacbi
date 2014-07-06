@@ -15,6 +15,7 @@ from .entity import IdHolder
 from .account import Account
 from .bank import Bank
 from .transaction import Transaction
+from .cbibon_dom import PCRecord, EFRecord
 from datetime import date, datetime
 
 if sys.version_info[0] >= 3:
@@ -79,6 +80,7 @@ class Payment(AttributeCarrier):
             self.gen_id()
         kwargs['payment_id'] = self.req_id
         kwargs['register_eeid_function'] = self.add_eeid
+        kwargs['payment'] = self
         txr = Transaction(**kwargs)
         txr.perform_checks()
         self.transactions.append(txr)
@@ -108,6 +110,10 @@ class Payment(AttributeCarrier):
             raise MissingABIError('The payment needs an \'abi\' attribute')
         self.bank = Bank(abi=abi)
 
+        # for CBI text files
+        self.cab = self.account.iban[10:15]
+        self.cc = self.account.iban[15:27]
+
         if hasattr(self, 'ultimate_debtor'):
             assert isinstance(self.ultimate_debtor, IdHolder)
 
@@ -118,6 +124,18 @@ class Payment(AttributeCarrier):
 
         # Todo: if there is an initiator, check that it has a CUC
         # Todo: if there is no initiator, check that the debtor has a CUC
+
+    def amount_sum(self):
+        return sum([tx.amount for tx in self.transactions])
+
+    def get_initiator(self):
+        """
+        Returns the entity designated as initiator for the transfer.
+        """
+        if hasattr(self, 'initiator'):
+            return self.initiator
+        else:
+            return self.debtor
 
     def get_xml_root(self):
         """
@@ -158,12 +176,8 @@ class Payment(AttributeCarrier):
         etree.SubElement(header, 'MsgId').text = self.req_id
         etree.SubElement(header, 'CreDtTm').text = datetime.now().isoformat()
         etree.SubElement(header, 'NbOfTxs').text = str(len(self.transactions))
-        etree.SubElement(header, 'CtrlSum').text = str(sum([
-            tx.amount for tx in self.transactions]))
-        if hasattr(self, 'initiator'):
-            initiator = self.initiator
-        else:
-            initiator = self.debtor
+        etree.SubElement(header, 'CtrlSum').text = str(self.amount_sum())
+        initiator = self.get_initiator()
         header.append(initiator.__tag__(as_initiator=True))
 
         # Payment info
@@ -226,8 +240,49 @@ class Payment(AttributeCarrier):
         """
         return self.__tag__()
 
-    def text(self, **kwargs):
+    def xml_text(self, **kwargs):
         """
         Return the XML structure as a string.
         """
         return etree.tostring(self.xml(), **kwargs)
+
+    def cbi_text(self):
+        self.perform_checks()
+
+        if self.account.is_foreign():
+            raise Exception('Cannot use foreign accounts with CBI text files')
+
+        today = date.today()
+
+        header = PCRecord()
+        footer = EFRecord()
+
+        sia_code = self.get_initiator().sia_code
+        header.sender = sia_code
+        footer.sender = sia_code
+        header.recipient = self.bank.abi
+        footer.recipient = self.bank.abi
+        header.creation = today
+        footer.creation = today
+        header.name = 'Distinta'
+        footer.name = 'Distinta'
+        if hasattr(self, 'high_priority'):
+            if self.high_priority:
+                header.prio = 'U'
+                footer.prio = 'U'
+
+        footer.orders = len(self.transactions)
+        footer.negative_amounts = 0
+        footer.positive_amounts = self.amount_sum()
+
+        records = [header.format()]
+        for transaction, i in zip(self.transactions,
+                                  range(len(self.transactions))):
+            records += transaction.cbi_records(i+1)
+        footer.records = len(records)+1
+        records.append(footer.format())
+        records.append(u'')
+        return '\n'.join(records)
+
+
+

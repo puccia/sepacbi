@@ -55,6 +55,15 @@ class Document(AttributeCarrier):
             items += [self.date.strftime('%Y%m%d')]
         return self.tag + '/ '.join(items)
 
+    def cbi(self):
+        # CBI-BON-001, record 50/60
+        if hasattr(self, 'number') and hasattr(self, 'date'):
+            return '%24s%s' % (self.number, self.date.strftime('%d%m%Y'))
+        elif hasattr(self, 'number'):
+            return '%24s      ' % (self.number)
+        else:
+            raise Exception('Invalid data for CBI format')
+
 
 class Invoice(Document):
     "Commercial invoice."
@@ -86,3 +95,6 @@ class Text(Document):
         # pylint: disable=no-member
         self.perform_checks()
         return self.tag + self.text
+
+    def cbi(self):
+        return '%30s' % self.text

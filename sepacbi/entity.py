@@ -72,7 +72,7 @@ class IdHolder(AttributeCarrier):
     Must have a CUC; may have an Italian tax code.
     """
     allowed_args = ('name', 'cf', 'code', 'private', 'cuc', 'address',
-                    'country')
+                    'country', 'sia_code')
 
     def __init__(self, **kwargs):
         self.private = False

@@ -12,12 +12,23 @@ from decimal import Decimal
 from .util import AttributeCarrier
 from .bank import Bank
 from .account import Account
+from .cbibon_dom import TransferInfo, PayerIBANInfo, PayeeIBANInfo, \
+    PayerInfo, PayeeInfo, PayeeAddress, PurposeInfo, StatusRequest
 import sys
 
 if sys.version_info[0] >= 3:
     # pylint: disable=redefined-builtin
     # pylint: disable=invalid-name
     basestring = str
+
+
+# Categories to CBI purpose mapping:
+
+CATEGORY_CBI_MAP = {
+    'SALA': '27020',
+    'PENS': '27010',
+    'SUPP': '48000',
+}
 
 
 class MissingBICError(Exception):
@@ -36,7 +47,7 @@ class Transaction(AttributeCarrier):
         'tx_id', 'eeid', 'category', 'rmtinfo', 'amount',
         'ultimate_debtor', 'bic', 'account', 'creditor', 'ultimate_creditor',
         'docs', 'purpose', 'payment_seq', 'payment_id',
-        'register_eeid_function')
+        'register_eeid_function', 'payment', 'cbi_purpose')
 
     def __init__(self, *args, **kwargs):
         self.purpose = 'SUPP'
@@ -122,3 +133,111 @@ class Transaction(AttributeCarrier):
             etree.SubElement(rmtinf, 'Ustrd').text = ''.join(
                 [str(doc) for doc in self.docs])
         return root
+
+    def cbi_records(self, prog=None):
+        if self.account.is_foreign():
+            raise Exception('Cannot use a foreign IBAN with CBI text files')
+
+        records = []
+
+        xinfo = TransferInfo()
+        xinfo.prog_number = prog
+        if hasattr(self.payment, 'execution_date'):
+            xinfo.execution_date = self.payment.execution_date
+        # TODO: allow generic codes for salaries, pensions
+        if hasattr(self, 'cbi_purpose'):
+            xinfo.purpose = self.cbi_purpose
+        elif hasattr(self, 'category'):
+            if self.category in CATEGORY_CBI_MAP:
+                xinfo.purpose = CATEGORY_CBI_MAP[self.category]
+            else:
+                raise Exception('Cannot map cateogry %r; please supply the '
+                                '\'cbi_purpose\' attribute' % self.category)
+        else:
+            xinfo.purpose = '48000'
+
+        xinfo.amount = self.amount
+        xinfo.ord_abi = self.payment.bank.abi
+        xinfo.ord_cab = self.payment.cab
+        xinfo.ord_account = self.payment.cc
+        if hasattr(self.payment, 'high_priority'):
+            if self.payment.high_priority:
+                xinfo.prio = 'U'
+        records.append(xinfo.format())
+
+        ord_iban = PayerIBANInfo()
+        ord_iban.prog_number = prog
+        ord_iban.iban = self.payment.account.iban
+        records.append(ord_iban.format())
+
+        ben_iban = PayeeIBANInfo()
+        ben_iban.prog_number = prog
+        ben_iban.iban = self.account.iban
+        records.append(ben_iban.format())
+
+        ord_info = PayerInfo()
+        ord_info.prog_number = prog
+        ord_info.name = self.payment.debtor.name
+        ord_info.tax_code = self.payment.debtor.cf
+        records.append(ord_info.format())
+
+        ben_info = PayeeInfo()
+        ben_info.prog_number = prog
+        ben_info.name = self.creditor.name
+        if hasattr(self.creditor, 'cf'):
+            ben_info.tax_code = self.creditor.cf
+        records.append(ben_info.format())
+
+        # Record 40 is not written
+        records += self.rmt_cbi_records(prog=prog)
+
+        return records
+
+    @classmethod
+    def rmtinfo_record(cls, record_type, prog, line):
+        record = PurposeInfo()
+        record.prog_number = prog
+        record.record_type = record_type
+        record.desc = line
+        return record
+
+    def rmt_cbi_records(self, prog):
+        records = []
+        if hasattr(self, 'rmtinfo'):
+            if len(self.rmtinfo) <= 90:
+                record = PurposeInfo()
+                record.prog_number = prog
+                record.desc = self.rmtinfo
+                records += [record.format()]
+            else:
+                start = 0
+                while start < len(self.rmtinfo):
+                    records += [self.rmtinfo_record('60', prog,
+                        self.rmtinfo[start:start+90]).format()]
+        else:
+            record_type = '60'
+            if len(self.docs) <= 3:
+                record_type = '50'
+            i = 0
+            line = ''
+            while i < len(self.docs):
+                line += self.docs[i].cbi()
+                if i % 3 == 2:
+                    records.append(self.rmtinfo_record(record_type, prog, line
+                        ).format())
+                    line = ''
+                i += 1
+            if line != '':
+                records.append(self.rmtinfo_record(record_type, prog, line
+                    ).format())
+            if len(records) > 5:
+                raise Exception('Too many documents for remittance info')
+        return records
+
+
+            
+
+
+
+
+

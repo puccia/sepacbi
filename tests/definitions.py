@@ -11,6 +11,8 @@ pvt = IdHolder(name='Mario Rossi', cf='RSSMRA50C10F842H',
 
 biz_with_cuc = copy(biz)
 biz_with_cuc.cuc = 'S0215325Z'
+biz_with_sia = copy(biz)
+biz_with_sia.sia_code = '0A123'
 acct_86 = 'IT 86 U 07601 11500 000010117463'
 acct_37 = 'IT37Z0760101600000028426203'
 foreign_acct = 'ES38 2100 1579 8002 0025 5488'
