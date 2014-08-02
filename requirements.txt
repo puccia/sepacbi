@@ -1,1 +1,3 @@
 lxml
+unidecode
+six
