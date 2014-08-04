@@ -191,6 +191,11 @@ class Transaction(AttributeCarrier):
         # Record 40 is not written
         records += self.rmt_cbi_records(prog=prog)
 
+        # The status request record is empty
+        status_req = StatusRequest()
+        status_req.prog_number = prog
+        records.append(status_req.format())
+
         return records
 
     @classmethod
