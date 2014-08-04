@@ -31,7 +31,7 @@ class PCRecord(CBIRecord):
         f.dt(14, 'creation', 6)
         f.an(20, 'name', 20)
         f.an(40, 'available', 6)
-        f.an(46, 'filler2', 61)
+        f.an(46, 'filler2', 59)
         f.an(105, 'flow_qualifier', 7)
         f.an(112, 'filler3', 1)
         f.an(113, 'prio', 1)
