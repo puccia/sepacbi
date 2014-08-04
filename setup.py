@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="sepacbi",
-    version="0.1.3",
+    version="0.1.4",
     description="SEPA Credit Transfer request (CBI) XML generator",
     long_description="{0:s}\n\n".format(
         open("README.rst").read()
