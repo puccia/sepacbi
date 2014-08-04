@@ -251,7 +251,7 @@ class NumericField(BaseField):
     def _specialized_format(self, value):
         if value is None:
             return u' '*self._flen
-        return str(int(value)).rjust(self._flen)
+        return str(int(value)).zfill(self._flen)
 
     _default_value = None
 
@@ -317,7 +317,7 @@ class DecimalField(BaseField):
     def _specialized_format(self, value):
         if value is None:
             value = Decimal(0)
-        return str((value * self.multiplier).to_integral()).rjust(self._flen)
+        return str((value * self.multiplier).to_integral()).zfill(self._flen)
 
     _default_value = None
 
