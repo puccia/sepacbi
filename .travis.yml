@@ -14,7 +14,7 @@ matrix:
           env: TOXENV=py34
         - python: "pypy"
           env: TOXENV=pypy
-        - env: TOXENV=docs 
+        - env: TOXENV=docs
 
 install:
     - pip install tox
