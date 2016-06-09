@@ -23,10 +23,9 @@ class AddressFormatError(Exception):
     Raised when an Address is created with unsuitable arguments.
     """
 
-
-class Address(AttributeCarrier):
+class SctAddress(AttributeCarrier):
     """
-    The postal address of an entity.
+    The postal address of an entity for the SEPA SCT request mode.
     """
     def __init__(self, *args):
         """
@@ -65,7 +64,7 @@ def emit_id_tag(id_code, id_type=None):
     return othr
 
 
-class IdHolder(AttributeCarrier):
+class SctIdHolder(AttributeCarrier):
     # pylint: disable=no-member
     """
     Describes an Initiator.
@@ -76,7 +75,7 @@ class IdHolder(AttributeCarrier):
 
     def __init__(self, **kwargs):
         self.private = False
-        super(IdHolder, self).__init__(**kwargs)
+        super(SctIdHolder, self).__init__(**kwargs)
 
     def perform_checks(self):
         # pylint: disable=access-member-before-definition
@@ -91,8 +90,8 @@ class IdHolder(AttributeCarrier):
             self.max_length('cuc', 35)
         if hasattr(self, 'address'):
             if isinstance(self.address, (list, tuple)):
-                self.address = Address(*self.address)
-            assert isinstance(self.address, Address)
+                self.address = SctAddress(*self.address)
+            assert isinstance(self.address, SctAddress)
         if hasattr(self, 'country'):
             self.length('country', 2)
 

@@ -1,10 +1,12 @@
-from sepacbi import Payment, Invoice, DebitNote, Text
+from sepacbi import SctFactory, Invoice, DebitNote, Text #Payment,
 from .definitions import *
 import re
 import sys
 from datetime import datetime, date
 
 from lxml import etree
+
+Payment = SctFactory.get_payment()
 
 PYTHON3 = False
 if sys.version_info[0] >= 3:

@@ -1,6 +1,7 @@
 import pytest
 
-from sepacbi import IdHolder, Payment
+# from sepacbi import IdHolder, Payment
+from sepacbi import SctFactory
 
 from sepacbi.payment import NoTransactionsError, MissingABIError, \
     InvalidEndToEndIDError
@@ -11,6 +12,8 @@ from sepacbi.iban import InvalidIBANError
 
 from .definitions import *
 
+Payment = SctFactory.get_payment()
+IdHolder = SctFactory.get_id_holder()
 
 def test_empty_payment():
     "Payments without any transaction must raise an exception."
@@ -73,11 +76,11 @@ def test_missing_attr_transaction():
         with pytest.raises(AttributeError):
             payment.add_transaction(**params)
             payment.xml()
-    
+
     payment = simple_payment()
     with pytest.raises(AssertionError):
         payment.add_transaction(**basic_data)
-        
+
 
 def test_missing_CUC():
     "The `debtor` entity must always have a CUC."

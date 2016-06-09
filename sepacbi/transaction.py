@@ -36,7 +36,7 @@ class MissingBICError(Exception):
     Raised when a BIC code is needed but not specified.
     """
 
-class Transaction(AttributeCarrier):
+class SctTransaction(AttributeCarrier):
     """
     Transaction describes a single credit transfer from the debtor's account
     (specified in the global payment data) to a creditor account.
@@ -52,7 +52,7 @@ class Transaction(AttributeCarrier):
     def __init__(self, *args, **kwargs):
         self.purpose = 'SUPP'
         self.eeid_registered = False
-        super(Transaction, self).__init__(*args, **kwargs)
+        super(SctTransaction, self).__init__(*args, **kwargs)
 
     def gen_id(self):
         "Generate a sequential ID, if not supplied, for the `InstrId` element."
@@ -238,11 +238,3 @@ class Transaction(AttributeCarrier):
             if len(records) > 5:
                 raise Exception('Too many documents for remittance info')
         return records
-
-
-            
-
-
-
-
-

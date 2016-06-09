@@ -11,10 +11,10 @@ import sys
 
 from lxml import etree
 from .util import AttributeCarrier, booltext
-from .entity import IdHolder
+from .entity import SctIdHolder
 from .account import Account
 from .bank import Bank
-from .transaction import Transaction
+from .transaction import SctTransaction
 from .cbibon_dom import PCRecord, EFRecord
 from datetime import date, datetime
 
@@ -45,7 +45,7 @@ class InvalidEndToEndIDError(Exception):
     """
 
 
-class Payment(AttributeCarrier):
+class SctPayment(AttributeCarrier):
     # pylint: disable=no-member
     # pylint: disable=attribute-defined-outside-init
     # pylint: disable=access-member-before-definition
@@ -65,7 +65,7 @@ class Payment(AttributeCarrier):
         self.envelope = False
         self.transactions = []
         self.eeid_set = set()
-        super(Payment, self).__init__(**kwargs)
+        super(SctPayment, self).__init__(**kwargs)
 
     def add_eeid(self, txid):
         "Add a transaction's end-to-end ID to check for uniqueness."
@@ -81,7 +81,7 @@ class Payment(AttributeCarrier):
         kwargs['payment_id'] = self.req_id
         kwargs['register_eeid_function'] = self.add_eeid
         kwargs['payment'] = self
-        txr = Transaction(**kwargs)
+        txr = SctTransaction(**kwargs)
         txr.perform_checks()
         self.transactions.append(txr)
 
@@ -96,7 +96,7 @@ class Payment(AttributeCarrier):
             self.gen_id()
         self.max_length('req_id', 35)
 
-        assert isinstance(self.debtor, IdHolder)
+        assert isinstance(self.debtor, SctIdHolder)
 
         if isinstance(self.account, basestring):
             self.account = Account(iban=self.account)
@@ -115,7 +115,7 @@ class Payment(AttributeCarrier):
         self.cc = self.account.iban[15:27]
 
         if hasattr(self, 'ultimate_debtor'):
-            assert isinstance(self.ultimate_debtor, IdHolder)
+            assert isinstance(self.ultimate_debtor, SctIdHolder)
 
         if hasattr(self, 'charges_account'):
             if isinstance(self.charges_account, basestring):
@@ -283,6 +283,3 @@ class Payment(AttributeCarrier):
         records.append(footer.format())
         records.append(u'')
         return '\n'.join(records)
-
-
-

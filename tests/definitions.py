@@ -1,7 +1,8 @@
 from copy import copy
 
-from sepacbi import IdHolder
+from sepacbi import SctFactory #IdHolder
 
+IdHolder = SctFactory.get_id_holder()
 
 biz = IdHolder(name='Test Business S.P.A.', cf='12312312311',
                country='IT', address=['Via Giuseppe Verdi, 15', '33100 Udine'])
