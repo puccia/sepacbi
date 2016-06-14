@@ -7,6 +7,7 @@ from datetime import datetime, date
 from lxml import etree
 
 Payment = SctFactory.get_payment()
+Transaction = SctFactory.get_transaction()
 
 PYTHON3 = False
 if sys.version_info[0] >= 3:
