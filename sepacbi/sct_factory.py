@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""Module containing the SctFactory and SddFactory classes"""
+"""Module containing the SctFactory class"""
 
 import sys
 from lxml import etree
@@ -244,6 +244,7 @@ class SctFactory(object):
 
             if not isinstance(self.amount, Decimal):
                 self.amount = Decimal(str(self.amount)).quantize(Decimal('.01'))
+
             if isinstance(self.account, basestring):
                 self.account = Account(iban=self.account)
             if self.account.is_foreign():

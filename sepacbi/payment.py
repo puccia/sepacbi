@@ -44,6 +44,10 @@ class InvalidEndToEndIDError(Exception):
     Raised when a transaction has a non-unique end-to-end ID.
     """
 
+class SequenceTypeError(Exception):
+    """
+    Raised when the sequence type for a payment is wrong or missing
+    """
 
 class Payment(AttributeCarrier):
     # pylint: disable=no-member

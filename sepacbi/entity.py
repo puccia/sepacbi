@@ -17,6 +17,11 @@ class MissingCUCError(Exception):
     """
     pass
 
+class MissingICSError(Exception):
+    """
+    Raised when an Entity whitout an 'ICS' attribute is used as a creditor.
+    """
+    pass
 
 class AddressFormatError(Exception):
     """
