@@ -64,6 +64,11 @@ class SddFactory(object):
                 assert isinstance(self.ultimate_creditor, IdHolder)
         setattr(Payment, 'perform_checks', perform_checks)
 
+        def emit_tag(self):
+            """Returns the whole XML structure for the payment."""
+            
+        setattr(Payment, 'emit_tag', emit_tag)
+
         return Payment
 
     @staticmethod
@@ -101,6 +106,24 @@ class SddFactory(object):
             if hasattr(self, 'ultimate_debtor'):
                 assert isinstance(self.ultimate_debtor, IdHolder)
         setattr(Transaction, 'perform_checks', perform_checks)
+
+        def emit_tag(self):
+            """
+            Returns the XML tag for the transaction.
+            """
+            root = etree.Element('DrctDbtTxInf')
+            pmtid = etree.SubElement(root, 'PmtId')
+            etree.SubElement(pmtid, 'EndToEndId').text = self.eeid
+            etree.SubElement(root, 'InstdAmt', attrib={'Ccy':"EUR"}).text = self.amount
+            # drctdbttx = etree.SubElement(root, 'DrctDbtTx')
+            agt = etree.SubElement(root, 'DbtrAgt')
+            agt.append(self.Bank.__tag__())
+            root.append(self.creditor.__tag__('Cdtr'))
+            root.append(self.account.__tag__('CdtrAcct'))
+            if hasattr(self, 'ultimate_debtor'):
+                root.append(self.ultimate_creditor.__tag__('UltmtDbtr'))
+            return root
+        setattr(Transaction, 'emit_tag', emit_tag)
 
         return Transaction
 
