@@ -23,7 +23,7 @@ class SddFactory(object):
     @staticmethod
     def get_payment():
         """Builds and returns the Payment class"""
-        payment_allowed_args = ('msg_id', 'initiator', 'req_id', 'sequence_tye',
+        payment_allowed_args = ('msg_id', 'initiator', 'req_id', 'sequence_type',
                                 'collection_date', 'creditor', 'account', 'bic',
                                 'ultimate_creditor')
         setattr(Payment, 'allowed_args', payment_allowed_args)
@@ -44,9 +44,9 @@ class SddFactory(object):
             if hasattr(self, 'initiator'):
                 assert isinstance(self.initiator, IdHolder)
 
-            if not hasattr(self, 'sequence_tye'):
+            if not hasattr(self, 'sequence_type'):
                 raise SequenceTypeError('Sequence type must be provided')
-            elif self.sequence_tye not in self.allowed_sequence_types:
+            elif self.sequence_type not in self.allowed_sequence_types:
                 raise SequenceTypeError('Sequence type must be : OOFF, FRST, RCUR or FNAL')
 
             assert isinstance(self.creditor, IdHolder)
@@ -68,8 +68,8 @@ class SddFactory(object):
 
         def emit_tag(self):
             """Returns the whole XML structure for the payment."""
-            root = etree.Element('Document', nsmap={None : self.xmlns,
-                                                'xsi' : self.xsi})
+            root = etree.Element('Document', nsmap={None : "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
+                                                'xsi' : "http://www.w3.org/2001/XMLSchema-instance"})
             cstmrdrctdtinitn = etree.SubElement(root, 'CstmrDrctDbtInitn')
 
             # Group Header
@@ -79,7 +79,7 @@ class SddFactory(object):
             etree.SubElement(grphdr, 'NbOfTxs').text = str(len(self.transactions))
             etree.SubElement(grphdr, 'CtrlSum').text = str(self.amount_sum())
             initiator = self.get_initiator()
-            header.append(initiator.__tag__('InitgPty'))
+            grphdr.append(initiator.__tag__('InitgPty'))
 
             # Payment Information
             info = etree.SubElement(cstmrdrctdtinitn, 'PmtInf')
@@ -94,7 +94,7 @@ class SddFactory(object):
             pmttpinf = etree.SubElement(info, 'PmtTpInf')
             svclvl = etree.SubElement(pmttpinf, 'SvcLvl')
             etree.SubElement(svclvl, 'Cd').text = 'SEPA'
-            lclinstrm = etree.SubElement(payment_type, 'LclInstrm')
+            lclinstrm = etree.SubElement(pmttpinf, 'LclInstrm')
             etree.SubElement(lclinstrm, 'Cd').text = 'CORE'
             etree.SubElement(pmttpinf, 'SeqTp').text = self.sequence_type
 
@@ -105,20 +105,24 @@ class SddFactory(object):
             etree.SubElement(info, 'ReqdColltnDt').text = execution_date.isoformat()
 
             # Creditor Informations
-            info.append(self.debtor.__tag__('Cdtr'))
+            info.append(self.creditor.__tag__('Cdtr'))
 
             # Creditor Account
             info.append(self.account.__tag__('CdtrAcct'))
 
-            agent = etree.SubElement(info, 'DbtrAgt')
+            agent = etree.SubElement(info, 'CdtrAgt')
             agent.append(self.bank.__tag__())
 
             # Ultimate Creditor
             if hasattr(self, 'ultimate_creditor'):
-                info.append(self.ultimate_debtor.__tag__('UltmtCdtr'))
+                info.append(self.ultimate_creditor.__tag__('UltmtCdtr'))
 
             # Charge Bearer
             etree.SubElement(info, 'ChrgBr').text = 'SLEV'
+
+            # Creditor Scheme ID
+            cdtrschmeid = etree.SubElement(info, 'CdtrSchmeId')
+            cdtrschmeid.append(self.creditor.emit_scheme_id_tag())
 
             # Transactions
             if len(self.transactions) == 0:
@@ -134,7 +138,9 @@ class SddFactory(object):
     def get_transaction():
         """Builds and returns the Transaction class"""
         transaction_allowed_args = ('eeid', 'amount', 'debtor', 'account',
-                                    'bic', 'ultimate_debtor')
+                                    'bic', 'ultimate_debtor','payment_seq',
+                                    'payment_id','register_eeid_function',
+                                    'payment')
         setattr(Transaction, 'allowed_args', transaction_allowed_args)
 
         def perform_checks(self):
@@ -173,14 +179,14 @@ class SddFactory(object):
             root = etree.Element('DrctDbtTxInf')
             pmtid = etree.SubElement(root, 'PmtId')
             etree.SubElement(pmtid, 'EndToEndId').text = self.eeid
-            etree.SubElement(root, 'InstdAmt', attrib={'Ccy':"EUR"}).text = self.amount
+            etree.SubElement(root, 'InstdAmt', attrib={'Ccy':"EUR"}).text = str(self.amount)
             # drctdbttx = etree.SubElement(root, 'DrctDbtTx')
             agt = etree.SubElement(root, 'DbtrAgt')
-            agt.append(self.Bank.__tag__())
-            root.append(self.creditor.__tag__('Cdtr'))
-            root.append(self.account.__tag__('CdtrAcct'))
+            agt.append(self.bank.__tag__())
+            root.append(self.debtor.__tag__('Dbtr'))
+            root.append(self.account.__tag__('DbtrAcct'))
             if hasattr(self, 'ultimate_debtor'):
-                root.append(self.ultimate_creditor.__tag__('UltmtDbtr'))
+                root.append(self.ultimate_debtor.__tag__('UltmtDbtr'))
             return root
         setattr(Transaction, 'emit_tag', emit_tag)
 
@@ -245,6 +251,7 @@ class SddFactory(object):
             # Country
             if hasattr(self, 'country'):
                 etree.SubElement(root, 'CtryOfRes').text = self.country
+            return root
         setattr(IdHolder, 'emit_tag', emit_tag)
 
         def emit_scheme_id_tag(self):
@@ -255,7 +262,8 @@ class SddFactory(object):
                 raise MissingICSError
             idtag = etree.Element('Id')
             prvtid = etree.SubElement(idtag, 'PrvtId')
-            orgid.append(emit_id_tag(self.ics, None))
+            prvtid.append(emit_id_tag(self.ics, 'scheme_id'))
+            return idtag
         setattr(IdHolder, 'emit_scheme_id_tag', emit_scheme_id_tag)
 
 

@@ -63,9 +63,12 @@ def emit_id_tag(id_code, id_type=None):
     othr = etree.Element('Othr')
     id_tag = etree.SubElement(othr, 'Id')
     id_tag.text = id_code
-    if id_type is not None:
+    if id_type is not 'scheme_id' and id_type is not None:
         issuer = etree.SubElement(othr, 'Issr')
         issuer.text = id_type
+    elif id_type is 'scheme_id':
+        schmenm = etree.SubElement(othr, 'SchmeNm')
+        etree.SubElement(schmenm, 'Prtry').text = 'SEPA'
     return othr
 
 
