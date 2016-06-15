@@ -46,6 +46,19 @@ class SctFactory(object):
                 return self.debtor
         setattr(Payment, 'get_initiator', get_initiator)
 
+        def add_transaction(self, **kwargs):
+            "Adds a transaction to the internal list. Does not return anything."
+            kwargs['payment_seq'] = len(self.transactions)+1
+            if not hasattr(self, 'req_id'):
+                self.gen_id()
+            kwargs['payment_id'] = self.req_id
+            kwargs['register_eeid_function'] = self.add_eeid
+            kwargs['payment'] = self
+            txr = Transaction(**kwargs)
+            txr.perform_checks()
+            self.transactions.append(txr)
+        setattr(Payment, 'add_transaction', add_transaction)
+
         def perform_checks(self):
             "Checks the validity of all supplied attributes."
             if not hasattr(self, 'req_id'):

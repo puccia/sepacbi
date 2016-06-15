@@ -8,6 +8,7 @@ __copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
 __license__ = '3-clause BSD'
 
 from lxml import etree
+from datetime import datetime, date
 from decimal import Decimal
 from .util import AttributeCarrier
 from .bank import Bank
@@ -35,6 +36,45 @@ class MissingBICError(Exception):
     """
     Raised when a BIC code is needed but not specified.
     """
+
+class Mandate(AttributeCarrier):
+    """
+    Mandate describes the mandate signed by the creditor and the debtor,
+    and its amendments.
+    """
+
+    allowed_args = ('rum', 'signature_date', 'old_rum', 'old_name',
+                    'old_ics', 'old_account', 'old_bic')
+
+    def __init__(self, **kwargs):
+        self.amendment = False
+        super(Mandate, self).__init__(**kwargs)
+
+    def perform_checks(self):
+        "Check argument lengths."
+        if hasattr(self, 'rum'):
+            self.max_length('rum', 35)
+
+        if hasattr(self, 'signature_date'):
+            if isinstance(self.signature_date, basestring):
+                self.max_length('signature_date', 10)
+                self.signature_date = datetime.strptime(self.signature_date, '%Y-%m-%d').date()
+
+        if hasattr(self, 'old_rum'):
+            self.max_length('old_rum', 35)
+
+    def emit_tag(self):
+        """
+        Returns the XML tag for the mandate
+        """
+        if hasattr(self, 'old_rum') or hasattr(self, 'old_name') or \
+           hasattr(self, 'old_ics') or hasattr(self, 'old_ics') or \
+           hasattr(self, 'old_account') or hasattr(self, 'old_bic'):
+            self.amendment = True
+
+
+
+
 
 class Transaction(AttributeCarrier):
     """

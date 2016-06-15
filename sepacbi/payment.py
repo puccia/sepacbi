@@ -77,17 +77,17 @@ class Payment(AttributeCarrier):
             raise InvalidEndToEndIDError('Duplicate end-to-end ID: %r' % txid)
         self.eeid_set.add(txid)
 
-    def add_transaction(self, **kwargs):
-        "Adds a transaction to the internal list. Does not return anything."
-        kwargs['payment_seq'] = len(self.transactions)+1
-        if not hasattr(self, 'req_id'):
-            self.gen_id()
-        kwargs['payment_id'] = self.req_id
-        kwargs['register_eeid_function'] = self.add_eeid
-        kwargs['payment'] = self
-        txr = Transaction(**kwargs)
-        txr.perform_checks()
-        self.transactions.append(txr)
+    # def add_transaction(self, **kwargs):
+    #     "Adds a transaction to the internal list. Does not return anything."
+    #     kwargs['payment_seq'] = len(self.transactions)+1
+    #     if not hasattr(self, 'req_id'):
+    #         self.gen_id()
+    #     kwargs['payment_id'] = self.req_id
+    #     kwargs['register_eeid_function'] = self.add_eeid
+    #     kwargs['payment'] = self
+    #     txr = Transaction(**kwargs)
+    #     txr.perform_checks()
+    #     self.transactions.append(txr)
 
     def gen_id(self):
         """Generate a unique ID for the payment"""
