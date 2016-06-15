@@ -31,6 +31,16 @@ class SddFactory(object):
         allowed_sequence_types = ('OOFF', 'FRST', 'RCUR', 'FNAL')
         setattr(Payment, 'allowed_sequence_types', allowed_sequence_types)
 
+        def get_initiator(self):
+            """
+            Returns the entity designated as initiator for the transfer.
+            """
+            if hasattr(self, 'initiator'):
+                return self.initiator
+            else:
+                return self.creditor
+        setattr(Payment, 'get_initiator', get_initiator)
+
         def perform_checks(self):
             "Checks the validity of all supplied attributes."
             if not hasattr(self, 'msg_id'):
@@ -182,16 +192,30 @@ class SddFactory(object):
             Returns the XML tag for the transaction.
             """
             root = etree.Element('DrctDbtTxInf')
+            # Transaction ID
             pmtid = etree.SubElement(root, 'PmtId')
             etree.SubElement(pmtid, 'EndToEndId').text = self.eeid
+
+            # Amount
             etree.SubElement(root, 'InstdAmt', attrib={'Ccy':"EUR"}).text = str(self.amount)
+
+            # Mandate
             # drctdbttx = etree.SubElement(root, 'DrctDbtTx')
+
+            # Debtor Agent
             agt = etree.SubElement(root, 'DbtrAgt')
             agt.append(self.bank.__tag__())
+
+            # Debtor
             root.append(self.debtor.__tag__('Dbtr'))
+
+            #Debtor Account
             root.append(self.account.__tag__('DbtrAcct'))
+
+            # Ultimate Debtor
             if hasattr(self, 'ultimate_debtor'):
                 root.append(self.ultimate_debtor.__tag__('UltmtDbtr'))
+
             return root
         setattr(Transaction, 'emit_tag', emit_tag)
 

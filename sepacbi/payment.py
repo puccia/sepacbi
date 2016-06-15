@@ -97,14 +97,14 @@ class Payment(AttributeCarrier):
     def amount_sum(self):
         return sum([tx.amount for tx in self.transactions])
 
-    def get_initiator(self):
-        """
-        Returns the entity designated as initiator for the transfer.
-        """
-        if hasattr(self, 'initiator'):
-            return self.initiator
-        else:
-            return self.debtor
+    # def get_initiator(self):
+    #     """
+    #     Returns the entity designated as initiator for the transfer.
+    #     """
+    #     if hasattr(self, 'initiator'):
+    #         return self.initiator
+    #     else:
+    #         return self.debtor
 
     def xml(self):
         """

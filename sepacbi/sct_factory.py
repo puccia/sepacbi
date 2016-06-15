@@ -36,6 +36,16 @@ class SctFactory(object):
 
         setattr(Payment, 'envelope', False)
 
+        def get_initiator(self):
+            """
+            Returns the entity designated as initiator for the transfer.
+            """
+            if hasattr(self, 'initiator'):
+                return self.initiator
+            else:
+                return self.debtor
+        setattr(Payment, 'get_initiator', get_initiator)
+
         def perform_checks(self):
             "Checks the validity of all supplied attributes."
             if not hasattr(self, 'req_id'):
