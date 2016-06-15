@@ -2,6 +2,7 @@
 """Module containing the SddFactory class"""
 
 from decimal import Decimal
+from datetime import date, datetime
 from lxml import etree
 from .payment import Payment, SequenceTypeError
 from .transaction import Transaction, MissingBICError
@@ -66,7 +67,64 @@ class SddFactory(object):
 
         def emit_tag(self):
             """Returns the whole XML structure for the payment."""
-            
+            root = etree.Element('Document', nsmap={None : self.xmlns,
+                                                'xsi' : self.xsi})
+            cstmrdrctdtinitn = etree.SubElement(root, 'CstmrDrctDbtInitn')
+
+            # Group Header
+            grphdr = etree.SubElement(cstmrdrctdtinitn, 'GrpHdr')
+            etree.SubElement(grphdr, 'MsgId').text = self.msg_id
+            etree.SubElement(grphdr, 'CreDtTm').text = datetime.now().isoformat()
+            etree.SubElement(grphdr, 'NbOfTxs').text = str(len(self.transactions))
+            etree.SubElement(grphdr, 'CtrlSum').text = str(self.amount_sum())
+            initiator = self.get_initiator()
+            header.append(initiator.__tag__('InitgPty'))
+
+            # Payment Information
+            info = etree.SubElement(cstmrdrctdtinitn, 'PmtInf')
+
+            # Payment ID
+            etree.SubElement(info, 'PmtInfId').text = self.req_id
+
+            # Payment Method
+            etree.SubElement(info, 'PmtMtd').text = 'DD'
+
+            # Payment Type Information
+            pmttpinf = etree.SubElement(info, 'PmtTpInf')
+            svclvl = etree.SubElement(pmttpinf, 'SvcLvl')
+            etree.SubElement(svclvl, 'Cd').text = 'SEPA'
+            lclinstrm = etree.SubElement(payment_type, 'LclInstrm')
+            etree.SubElement(lclinstrm, 'Cd').text = 'CORE'
+            etree.SubElement(pmttpinf, 'SeqTp').text = self.sequence_type
+
+            # Payment Requested Collection Date
+            execution_date = date.today()
+            if hasattr(self, 'collection_date'):
+                execution_date = self.execution_date
+            etree.SubElement(info, 'ReqdColltnDt').text = execution_date.isoformat()
+
+            # Creditor Informations
+            info.append(self.debtor.__tag__('Cdtr'))
+
+            # Creditor Account
+            info.append(self.account.__tag__('CdtrAcct'))
+
+            agent = etree.SubElement(info, 'DbtrAgt')
+            agent.append(self.bank.__tag__())
+
+            # Ultimate Creditor
+            if hasattr(self, 'ultimate_creditor'):
+                info.append(self.ultimate_debtor.__tag__('UltmtCdtr'))
+
+            # Charge Bearer
+            etree.SubElement(info, 'ChrgBr').text = 'SLEV'
+
+            # Transactions
+            if len(self.transactions) == 0:
+                raise NoTransactionsError
+            for txr in self.transactions:
+                info.append(txr.__tag__())
+            return root
         setattr(Payment, 'emit_tag', emit_tag)
 
         return Payment
