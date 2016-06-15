@@ -49,6 +49,11 @@ class SddFactory(object):
             elif self.sequence_type not in self.allowed_sequence_types:
                 raise SequenceTypeError('Sequence type must be : OOFF, FRST, RCUR or FNAL')
 
+            if hasattr(self, 'collection_date'):
+                if isinstance(self.collection_date, basestring):
+                    self.max_length('collection_date', 10)
+                    self.collection_date = datetime.strptime(self.collection_date, '%Y-%m-%d').date()
+
             assert isinstance(self.creditor, IdHolder)
 
             if isinstance(self.account, basestring):
@@ -99,10 +104,10 @@ class SddFactory(object):
             etree.SubElement(pmttpinf, 'SeqTp').text = self.sequence_type
 
             # Payment Requested Collection Date
-            execution_date = date.today()
+            collection_date = date.today()
             if hasattr(self, 'collection_date'):
-                execution_date = self.execution_date
-            etree.SubElement(info, 'ReqdColltnDt').text = execution_date.isoformat()
+                collection_date = self.collection_date
+            etree.SubElement(info, 'ReqdColltnDt').text = collection_date.isoformat()
 
             # Creditor Informations
             info.append(self.creditor.__tag__('Cdtr'))
