@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 """Module containing the SddFactory class"""
 
+import sys
 from decimal import Decimal
 from datetime import date, datetime
 from lxml import etree
