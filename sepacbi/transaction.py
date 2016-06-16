@@ -13,7 +13,7 @@ from decimal import Decimal
 from .util import AttributeCarrier, booltext
 from .bank import Bank
 from .account import Account
-from .entity import emit_id_tag
+from .entity import IdHolder, emit_id_tag
 from .cbibon_dom import TransferInfo, PayerIBANInfo, PayeeIBANInfo, \
     PayerInfo, PayeeInfo, PayeeAddress, PurposeInfo, StatusRequest
 import sys

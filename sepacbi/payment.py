@@ -14,7 +14,7 @@ from .util import AttributeCarrier, booltext
 from .entity import IdHolder
 from .account import Account
 from .bank import Bank
-from .transaction import Transaction
+from .transaction import Transaction, MissingBICError
 from .cbibon_dom import PCRecord, EFRecord
 from datetime import date, datetime
 
