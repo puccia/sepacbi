@@ -13,6 +13,7 @@ from sepacbi.iban import InvalidIBANError
 from .definitions import *
 
 Payment = SctFactory.get_payment()
+Transaction = SctFactory.get_transaction()
 IdHolder = SctFactory.get_id_holder()
 
 def test_empty_payment():

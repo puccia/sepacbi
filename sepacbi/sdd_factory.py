@@ -5,7 +5,7 @@ import sys
 from decimal import Decimal
 from datetime import date, datetime
 from lxml import etree
-from .payment import Payment, SequenceTypeError
+from .payment import Payment, SequenceTypeError, NoTransactionsError
 from .transaction import Transaction, Mandate, MissingBICError
 from .entity import IdHolder, Address, emit_id_tag, MissingICSError
 from .account import Account
@@ -207,7 +207,7 @@ class SddFactory(object):
                 if isinstance(self.old_account, basestring):
                     self.old_account = Account(iban=self.old_account)
                 assert isinstance(self.old_account, Account)
-                mandate.old_account = self.old_account
+                self.mandate.old_account = self.old_account
 
             if not hasattr(self, 'bic'):
                 raise MissingBICError

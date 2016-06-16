@@ -2,6 +2,8 @@ from copy import copy
 
 from sepacbi import SctFactory #IdHolder
 
+Payment = SctFactory.get_payment()
+Transaction = SctFactory.get_transaction()
 IdHolder = SctFactory.get_id_holder()
 
 biz = IdHolder(name='Test Business S.P.A.', cf='12312312311',
