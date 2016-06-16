@@ -11,53 +11,37 @@ class SctFactory(object):
 
     @staticmethod
     def get_payment():
-        """Returns the Payment class"""
-
-        setattr(Payment, 'allowed_args', sct_payment_attr_dict['allowed_args'])
-        setattr(Payment, 'envelope', False)
-
-        setattr(Payment, 'get_initiator', sct_payment_attr_dict['get_initiator'])
-
-        setattr(Payment, 'add_transaction', sct_payment_attr_dict['add_transaction'])
-
-        setattr(Payment, 'perform_checks', sct_payment_attr_dict['perform_checks'])
-
-        setattr(Payment, 'get_xml_root', sct_payment_attr_dict['get_xml_root'])
-
-        setattr(Payment, 'emit_tag', sct_payment_attr_dict['emit_tag'])
-
-        setattr(Payment, 'cbi_text', sct_payment_attr_dict['cbi_text'])
+        """
+        Returns the Payment class configured for the SCT Mode
+        """
+        
+        modifiy_class_from_dict(Payment, sct_payment_attr_dict)
 
         return Payment
 
     @staticmethod
     def get_transaction():
-        """Returns a STransaction object"""
+        """
+        Returns the Transaction class configured for the SCT Mode
+        """
 
-        setattr(Transaction, 'allowed_args', sct_transaction_attr_dict['allowed_args'])
-
-        setattr(Transaction, 'purpose', 'SUPP')
-
-        setattr(Transaction, 'perform_checks', sct_transaction_attr_dict['perform_checks'])
-
-        setattr(Transaction, 'emit_tag', sct_transaction_attr_dict['emit_tag'])
-
-        setattr(Transaction, 'cbi_records', sct_transaction_attr_dict['cbi_records'])
-
-        setattr(Transaction, 'rmtinfo_record', classmethod(sct_transaction_attr_dict['rmtinfo_record']))
-
-        setattr(Transaction, 'rmt_cbi_records', sct_transaction_attr_dict['rmt_cbi_records'])
+        modifiy_class_from_dict(Transaction, sct_transaction_attr_dict)
 
         return Transaction
 
     @staticmethod
     def get_id_holder():
-        """returns an IdHolder object"""
+        """
+        Returns the IdHolder class configured for the SCT Mode
+        """
 
-        setattr(IdHolder, 'allowed_args', sct_idholder_attr_dict['allowed_args'])
-
-        setattr(IdHolder, 'perform_checks', sct_idholder_attr_dict['perform_checks'])
-
-        setattr(IdHolder, 'emit_tag', sct_idholder_attr_dict['emit_tag'])
+        modifiy_class_from_dict(IdHolder, sct_idholder_attr_dict)
 
         return IdHolder
+
+def modifiy_class_from_dict(mod_class, attr_dict):
+    """
+    Set attributes and methods to a class from a dictionary
+    """
+    list([setattr(mod_class, x, attr_dict[x]) for x in \
+        list(attr_dict.keys())])

@@ -287,10 +287,154 @@ def sct_cbi_text(self):
     return '\n'.join(records)
 
 sct_payment_attr_dict = {'allowed_args' : sct_allowed_args,
+                         'envelope' : False,
                          'get_initiator' : sct_get_initiator,
                          'add_transaction' : sct_add_transaction,
                          'perform_checks' : sct_perform_checks,
                          'get_xml_root' : sct_get_xml_root,
                          'emit_tag' : sct_emit_tag,
                          'cbi_text' : sct_cbi_text
+                        }
+
+# SDD Mode attributes and methods
+
+sdd_allowed_args = ('msg_id', 'initiator', 'req_id', 'sequence_type',
+                        'collection_date', 'creditor', 'account', 'bic',
+                        'ultimate_creditor')
+
+allowed_sequence_types = ('OOFF', 'FRST', 'RCUR', 'FNAL')
+
+def sdd_get_initiator(self):
+    """
+    Returns the entity designated as initiator for the transfer.
+    """
+    if hasattr(self, 'initiator'):
+        return self.initiator
+    else:
+        return self.creditor
+
+def sdd_add_transaction(self, **kwargs):
+    "Adds a transaction to the internal list. Does not return anything."
+    kwargs['payment_seq'] = len(self.transactions)+1
+    if not hasattr(self, 'req_id'):
+        self.gen_id()
+    kwargs['payment_id'] = self.req_id
+    kwargs['register_eeid_function'] = self.add_eeid
+    kwargs['payment'] = self
+    if hasattr(self.creditor, 'old_name') or hasattr(self.creditor, 'old_ics'):
+        kwargs['creditor'] = self.creditor
+    txr = Transaction(**kwargs)
+    txr.perform_checks()
+    self.transactions.append(txr)
+
+def sdd_perform_checks(self):
+    "Checks the validity of all supplied attributes."
+    if not hasattr(self, 'msg_id'):
+        self.gen_id()
+    self.max_length('msg_id', 35)
+
+    if not hasattr(self, 'req_id'):
+        self.gen_id()
+    self.max_length('req_id', 35)
+
+    if hasattr(self, 'initiator'):
+        assert isinstance(self.initiator, IdHolder)
+
+    if not hasattr(self, 'sequence_type'):
+        raise SequenceTypeError('Sequence type must be provided')
+    elif self.sequence_type not in self.allowed_sequence_types:
+        raise SequenceTypeError('Sequence type must be : OOFF, FRST, RCUR or FNAL')
+
+    if hasattr(self, 'collection_date'):
+        if isinstance(self.collection_date, basestring):
+            self.max_length('collection_date', 10)
+            self.collection_date = datetime.strptime(self.collection_date, '%Y-%m-%d').date()
+
+    assert isinstance(self.creditor, IdHolder)
+
+    if isinstance(self.account, basestring):
+        self.account = Account(iban=self.account)
+    assert isinstance(self.account, Account)
+
+    if not hasattr(self, 'bic'):
+        raise MissingBICError
+    bic_length = len(self.bic)
+    assert bic_length in (8, 11)
+    bic = self.bic
+    self.bank = Bank(bic=bic)
+
+    if hasattr(self, 'ultimate_creditor'):
+        assert isinstance(self.ultimate_creditor, IdHolder)
+
+def sdd_emit_tag(self):
+    """Returns the whole XML structure for the payment."""
+    root = etree.Element('Document', nsmap={None : "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
+                                        'xsi' : "http://www.w3.org/2001/XMLSchema-instance"})
+    cstmrdrctdtinitn = etree.SubElement(root, 'CstmrDrctDbtInitn')
+
+    # Group Header
+    grphdr = etree.SubElement(cstmrdrctdtinitn, 'GrpHdr')
+    etree.SubElement(grphdr, 'MsgId').text = self.msg_id
+    etree.SubElement(grphdr, 'CreDtTm').text = datetime.now().isoformat()
+    etree.SubElement(grphdr, 'NbOfTxs').text = str(len(self.transactions))
+    etree.SubElement(grphdr, 'CtrlSum').text = str(self.amount_sum())
+    initiator = self.get_initiator()
+    grphdr.append(initiator.__tag__('InitgPty'))
+
+    # Payment Information
+    info = etree.SubElement(cstmrdrctdtinitn, 'PmtInf')
+
+    # Payment ID
+    etree.SubElement(info, 'PmtInfId').text = self.req_id
+
+    # Payment Method
+    etree.SubElement(info, 'PmtMtd').text = 'DD'
+
+    # Payment Type Information
+    pmttpinf = etree.SubElement(info, 'PmtTpInf')
+    svclvl = etree.SubElement(pmttpinf, 'SvcLvl')
+    etree.SubElement(svclvl, 'Cd').text = 'SEPA'
+    lclinstrm = etree.SubElement(pmttpinf, 'LclInstrm')
+    etree.SubElement(lclinstrm, 'Cd').text = 'CORE'
+    etree.SubElement(pmttpinf, 'SeqTp').text = self.sequence_type
+
+    # Payment Requested Collection Date
+    collection_date = date.today()
+    if hasattr(self, 'collection_date'):
+        collection_date = self.collection_date
+    etree.SubElement(info, 'ReqdColltnDt').text = collection_date.isoformat()
+
+    # Creditor Informations
+    info.append(self.creditor.__tag__('Cdtr'))
+
+    # Creditor Account
+    info.append(self.account.__tag__('CdtrAcct'))
+
+    agent = etree.SubElement(info, 'CdtrAgt')
+    agent.append(self.bank.__tag__())
+
+    # Ultimate Creditor
+    if hasattr(self, 'ultimate_creditor'):
+        info.append(self.ultimate_creditor.__tag__('UltmtCdtr'))
+
+    # Charge Bearer
+    etree.SubElement(info, 'ChrgBr').text = 'SLEV'
+
+    # Creditor Scheme ID
+    cdtrschmeid = etree.SubElement(info, 'CdtrSchmeId')
+    cdtrschmeid.append(self.creditor.emit_scheme_id_tag(self.creditor.ics))
+
+    # Transactions
+    if len(self.transactions) == 0:
+        raise NoTransactionsError
+    for txr in self.transactions:
+        info.append(txr.__tag__())
+    return root
+
+sdd_payment_attr_dict = {'allowed_args' : sdd_allowed_args,
+                         'allowed_sequence_types' : allowed_sequence_types,
+                         'get_initiator' : sdd_get_initiator,
+                         'add_transaction' : sdd_add_transaction,
+                         'perform_checks' : sdd_perform_checks,
+                         'emit_tag' : sdd_emit_tag
                         }

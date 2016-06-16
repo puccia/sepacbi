@@ -154,3 +154,84 @@ sct_idholder_attr_dict = {'allowed_args' : sct_allowed_args,
                           'perform_checks' : sct_perform_checks,
                           'emit_tag' : sct_emit_tag,
                          }
+
+# SDD Mode attributes and methods
+
+sdd_allowed_args = ('name', 'old_name', 'private', 'identifier',
+                    'ics', 'old_ics', 'address', 'country')
+
+def sdd_perform_checks(self):
+    # pylint: disable=access-member-before-definition
+    # pylint: disable=attribute-defined-outside-init
+    "Check argument lengths."
+    if hasattr(self, 'name'):
+        self.max_length('name', 70)
+
+    if hasattr(self, 'old_name'):
+        self.max_length('old_name', 70)
+
+    if hasattr(self, 'identifier'):
+        self.max_length('identifier', 35)
+
+    if hasattr(self, 'ics'):
+        self.max_length('ics', 35)
+
+    if hasattr(self, 'old_ics'):
+        self.max_length('old_ics', 35)
+
+    if hasattr(self, 'address'):
+        if isinstance(self.address, (list, tuple)):
+            self.address = Address(*self.address)
+        assert isinstance(self.address, Address)
+
+    if hasattr(self, 'country'):
+        self.length('country', 2)
+
+def sdd_emit_tag(self, tag=None):
+    """
+    Emit a subtree for an entity, using the supplied tag for the root
+    element.
+    """
+
+    root = etree.Element(tag)
+
+    # Name
+    if hasattr(self, 'name'):
+        name = etree.SubElement(root, 'Nm')
+        name.text = self.name
+
+    # Address
+    if hasattr(self, 'address'):
+        root.append(self.address.__tag__())
+
+    # ID
+    if hasattr(self, 'identifier'):
+        idtag = etree.SubElement(root, 'Id')
+        if self.private:
+            id_container = 'PrvtId'
+        else:
+            id_container = 'OrgId'
+        orgid = etree.SubElement(idtag, id_container)
+        orgid.append(emit_id_tag(self.identifier, None))
+
+    # Country
+    if hasattr(self, 'country'):
+        etree.SubElement(root, 'CtryOfRes').text = self.country
+    return root
+
+def sdd_emit_scheme_id_tag(self, ics):
+    """
+    For a creditor, emits the scheme id tag
+    """
+    if not hasattr(self, 'ics'):
+        raise MissingICSError
+    idtag = etree.Element('Id')
+    prvtid = etree.SubElement(idtag, 'PrvtId')
+    prvtid.append(emit_id_tag(ics, 'scheme_id'))
+    return idtag
+
+sdd_idholder_attr_dict = {'allowed_args' : sdd_allowed_args,
+                          'perform_checks' : sdd_perform_checks,
+                          'emit_tag' : sdd_emit_tag,
+                          'emit_scheme_id_tag' : sdd_emit_scheme_id_tag
+                         }

@@ -313,9 +313,108 @@ def sct_rmt_cbi_records(self, prog):
     return records
 
 sct_transaction_attr_dict = {'allowed_args' : sct_allowed_args,
+                             'purpose' : "SUPP",
                              'perform_checks' : sct_perform_checks,
                              'emit_tag' : sct_emit_tag,
                              'cbi_records' : sct_cbi_records,
                              'rmtinfo_record' : sct_rmtinfo_record,
                              'rmt_cbi_records' : sct_rmt_cbi_records
+                            }
+
+# SDD Mode atteributes and methods
+
+sdd_allowed_args = ('eeid', 'amount', 'rum', 'signature_date', 'old_rum', 'debtor', 'account',
+                            'old_account','bic', 'old_bic',
+                            'ultimate_debtor','payment_seq',
+                            'payment_id','register_eeid_function',
+                            'payment', 'creditor')
+
+def sdd_perform_checks(self):
+    "Checks the validity of all supplied attributes."
+    if not hasattr(self, 'eeid'):
+        self.gen_eeid()
+    self.max_length('eeid', 35)
+    if not self.eeid_registered:
+        self.register_eeid_function(self.eeid)
+        self.eeid_registered = True
+
+    if not isinstance(self.amount, Decimal):
+        self.amount = Decimal(str(self.amount)).quantize(Decimal('.01'))
+
+    if hasattr(self, 'rum') or hasattr(self, 'signature_date'):
+        self.mandate = Mandate()
+        if hasattr(self, 'rum'):
+            self.mandate.rum = self.rum
+        if hasattr(self, 'signature_date'):
+            self.mandate.signature_date = self.signature_date
+        if hasattr(self, 'old_rum'):
+            self.mandate.old_rum = self.old_rum
+        if hasattr(self, 'creditor'):
+            self.mandate.creditor = self.creditor
+
+    assert isinstance(self.debtor, IdHolder)
+
+    if isinstance(self.account, basestring):
+        self.account = Account(iban=self.account)
+    assert isinstance(self.account, Account)
+
+    if hasattr(self, 'old_account'):
+        if isinstance(self.old_account, basestring):
+            self.old_account = Account(iban=self.old_account)
+        assert isinstance(self.old_account, Account)
+        self.mandate.old_account = self.old_account
+
+    if not hasattr(self, 'bic'):
+        raise MissingBICError
+    bic_length = len(self.bic)
+    assert bic_length in (8, 11)
+    bic = self.bic
+    self.bank = Bank(bic=bic)
+
+    if hasattr(self, 'old_bic'):
+        old_bic_length = len(self.old_bic)
+        assert old_bic_length in (8, 11)
+        old_bic = self.old_bic
+        self.old_bank = Bank(bic=old_bic)
+        self.mandate.old_bank = self.old_bank
+
+    if hasattr(self, 'ultimate_debtor'):
+        assert isinstance(self.ultimate_debtor, IdHolder)
+
+def sdd_emit_tag(self):
+    """
+    Returns the XML tag for the transaction.
+    """
+    root = etree.Element('DrctDbtTxInf')
+    # Transaction ID
+    pmtid = etree.SubElement(root, 'PmtId')
+    etree.SubElement(pmtid, 'EndToEndId').text = self.eeid
+
+    # Amount
+    etree.SubElement(root, 'InstdAmt', attrib={'Ccy':"EUR"}).text = str(self.amount)
+
+    # Mandate
+    if hasattr(self, 'mandate'):
+        drctdbttx = etree.SubElement(root, 'DrctDbtTx')
+        drctdbttx.append(self.mandate.__tag__())
+
+    # Debtor Agent
+    agt = etree.SubElement(root, 'DbtrAgt')
+    agt.append(self.bank.__tag__())
+
+    # Debtor
+    root.append(self.debtor.__tag__('Dbtr'))
+
+    #Debtor Account
+    root.append(self.account.__tag__('DbtrAcct'))
+
+    # Ultimate Debtor
+    if hasattr(self, 'ultimate_debtor'):
+        root.append(self.ultimate_debtor.__tag__('UltmtDbtr'))
+
+    return root
+
+sdd_transaction_attr_dict = {'allowed_args' : sdd_allowed_args,
+                             'perform_checks' : sdd_perform_checks,
+                             'emit_tag' : sdd_emit_tag
                             }
