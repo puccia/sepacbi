@@ -10,9 +10,10 @@ __license__ = '3-clause BSD'
 from lxml import etree
 from datetime import datetime, date
 from decimal import Decimal
-from .util import AttributeCarrier
+from .util import AttributeCarrier, booltext
 from .bank import Bank
 from .account import Account
+from .entity import emit_id_tag
 from .cbibon_dom import TransferInfo, PayerIBANInfo, PayeeIBANInfo, \
     PayerInfo, PayeeInfo, PayeeAddress, PurposeInfo, StatusRequest
 import sys
@@ -43,8 +44,8 @@ class Mandate(AttributeCarrier):
     and its amendments.
     """
 
-    allowed_args = ('rum', 'signature_date', 'old_rum', 'old_name',
-                    'old_ics', 'old_account', 'old_bic')
+    allowed_args = ('rum', 'signature_date', 'amendment', 'old_rum',
+                    'creditor', 'old_account', 'old_bank')
 
     def __init__(self, **kwargs):
         self.amendment = False
@@ -67,13 +68,44 @@ class Mandate(AttributeCarrier):
         """
         Returns the XML tag for the mandate
         """
-        if hasattr(self, 'old_rum') or hasattr(self, 'old_name') or \
-           hasattr(self, 'old_ics') or hasattr(self, 'old_ics') or \
-           hasattr(self, 'old_account') or hasattr(self, 'old_bic'):
+        if hasattr(self, 'old_rum') or hasattr(self, 'creditor')  or \
+        hasattr(self, 'old_account') or hasattr(self, 'old_bank'):
             self.amendment = True
 
+        root = etree.Element('MndtRltdInf')
 
+        # RUM
+        if hasattr(self, 'rum'):
+            etree.SubElement(root, 'MndtId').text = self.rum
 
+        # Signature Date
+        if hasattr(self, 'signature_date'):
+            etree.SubElement(root, 'DtOfSgntr').text = str(self.signature_date)
+
+        # Amendment
+        etree.SubElement(root, 'AmdmntInd').text = booltext(self.amendment)
+
+        # Amendment Details
+        if self.amendment:
+            amdmntinfdtls = etree.SubElement(root, 'AmdmntInfDtls')
+
+            if hasattr(self, 'old_rum'):
+                etree.SubElement(amdmntinfdtls, 'OrgnlMndtId').text = self.old_rum
+
+            if hasattr(self, 'creditor'):
+                orgnlcdtrschmeid = etree.SubElement(amdmntinfdtls, 'OrgnlCdtrSchmeId')
+                if hasattr(self.creditor, 'old_name'):
+                    etree.SubElement(orgnlcdtrschmeid, 'Nm').text = self.creditor.old_name
+                if hasattr(self.creditor, 'old_ics'):
+                    orgnlcdtrschmeid.append(self.creditor.emit_scheme_id_tag(self.creditor.old_ics))
+
+            if hasattr(self, 'old_account'):
+                amdmntinfdtls.append(self.old_account.__tag__('OrgnlDbtrAcct'))
+
+            if hasattr(self, 'old_bank'):
+                orgnldbtragt = etree.SubElement(amdmntinfdtls, 'OrgnlDbtrAgt')
+                orgnldbtragt.append(self.old_bank.__tag__())
+        return root
 
 
 class Transaction(AttributeCarrier):

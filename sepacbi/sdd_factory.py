@@ -6,7 +6,7 @@ from decimal import Decimal
 from datetime import date, datetime
 from lxml import etree
 from .payment import Payment, SequenceTypeError
-from .transaction import Transaction, MissingBICError
+from .transaction import Transaction, Mandate, MissingBICError
 from .entity import IdHolder, Address, emit_id_tag, MissingICSError
 from .account import Account
 from .bank import Bank
@@ -49,6 +49,8 @@ class SddFactory(object):
             kwargs['payment_id'] = self.req_id
             kwargs['register_eeid_function'] = self.add_eeid
             kwargs['payment'] = self
+            if hasattr(self.creditor, 'old_name') or hasattr(self.creditor, 'old_ics'):
+                kwargs['creditor'] = self.creditor
             txr = Transaction(**kwargs)
             txr.perform_checks()
             self.transactions.append(txr)
@@ -150,7 +152,7 @@ class SddFactory(object):
 
             # Creditor Scheme ID
             cdtrschmeid = etree.SubElement(info, 'CdtrSchmeId')
-            cdtrschmeid.append(self.creditor.emit_scheme_id_tag())
+            cdtrschmeid.append(self.creditor.emit_scheme_id_tag(self.creditor.ics))
 
             # Transactions
             if len(self.transactions) == 0:
@@ -165,10 +167,11 @@ class SddFactory(object):
     @staticmethod
     def get_transaction():
         """Builds and returns the Transaction class"""
-        transaction_allowed_args = ('eeid', 'amount', 'debtor', 'account',
-                                    'bic', 'ultimate_debtor','payment_seq',
+        transaction_allowed_args = ('eeid', 'amount', 'rum', 'signature_date', 'old_rum', 'debtor', 'account',
+                                    'old_account','bic', 'old_bic',
+                                    'ultimate_debtor','payment_seq',
                                     'payment_id','register_eeid_function',
-                                    'payment')
+                                    'payment', 'creditor')
         setattr(Transaction, 'allowed_args', transaction_allowed_args)
 
         def perform_checks(self):
@@ -183,11 +186,28 @@ class SddFactory(object):
             if not isinstance(self.amount, Decimal):
                 self.amount = Decimal(str(self.amount)).quantize(Decimal('.01'))
 
+            if hasattr(self, 'rum') or hasattr(self, 'signature_date'):
+                self.mandate = Mandate()
+                if hasattr(self, 'rum'):
+                    self.mandate.rum = self.rum
+                if hasattr(self, 'signature_date'):
+                    self.mandate.signature_date = self.signature_date
+                if hasattr(self, 'old_rum'):
+                    self.mandate.old_rum = self.old_rum
+                if hasattr(self, 'creditor'):
+                    self.mandate.creditor = self.creditor
+
             assert isinstance(self.debtor, IdHolder)
 
             if isinstance(self.account, basestring):
                 self.account = Account(iban=self.account)
             assert isinstance(self.account, Account)
+
+            if hasattr(self, 'old_account'):
+                if isinstance(self.old_account, basestring):
+                    self.old_account = Account(iban=self.old_account)
+                assert isinstance(self.old_account, Account)
+                mandate.old_account = self.old_account
 
             if not hasattr(self, 'bic'):
                 raise MissingBICError
@@ -195,6 +215,13 @@ class SddFactory(object):
             assert bic_length in (8, 11)
             bic = self.bic
             self.bank = Bank(bic=bic)
+
+            if hasattr(self, 'old_bic'):
+                old_bic_length = len(self.old_bic)
+                assert old_bic_length in (8, 11)
+                old_bic = self.old_bic
+                self.old_bank = Bank(bic=old_bic)
+                self.mandate.old_bank = self.old_bank
 
             if hasattr(self, 'ultimate_debtor'):
                 assert isinstance(self.ultimate_debtor, IdHolder)
@@ -213,7 +240,9 @@ class SddFactory(object):
             etree.SubElement(root, 'InstdAmt', attrib={'Ccy':"EUR"}).text = str(self.amount)
 
             # Mandate
-            # drctdbttx = etree.SubElement(root, 'DrctDbtTx')
+            if hasattr(self, 'mandate'):
+                drctdbttx = etree.SubElement(root, 'DrctDbtTx')
+                drctdbttx.append(self.mandate.__tag__())
 
             # Debtor Agent
             agt = etree.SubElement(root, 'DbtrAgt')
@@ -237,8 +266,8 @@ class SddFactory(object):
     @staticmethod
     def get_id_holder():
         """Builds and returns the IdHolder class"""
-        id_holder_allowed_args = ('name', 'private', 'identifier', 'ics',
-                                  'address', 'country')
+        id_holder_allowed_args = ('name', 'old_name', 'private', 'identifier',
+                                  'ics', 'old_ics', 'address', 'country')
         setattr(IdHolder, 'allowed_args', id_holder_allowed_args)
 
         def perform_checks(self):
@@ -248,11 +277,17 @@ class SddFactory(object):
             if hasattr(self, 'name'):
                 self.max_length('name', 70)
 
+            if hasattr(self, 'old_name'):
+                self.max_length('old_name', 70)
+
             if hasattr(self, 'identifier'):
                 self.max_length('identifier', 35)
 
             if hasattr(self, 'ics'):
                 self.max_length('ics', 35)
+
+            if hasattr(self, 'old_ics'):
+                self.max_length('old_ics', 35)
 
             if hasattr(self, 'address'):
                 if isinstance(self.address, (list, tuple)):
@@ -296,7 +331,7 @@ class SddFactory(object):
             return root
         setattr(IdHolder, 'emit_tag', emit_tag)
 
-        def emit_scheme_id_tag(self):
+        def emit_scheme_id_tag(self, ics):
             """
             For a creditor, emits the scheme id tag
             """
@@ -304,7 +339,7 @@ class SddFactory(object):
                 raise MissingICSError
             idtag = etree.Element('Id')
             prvtid = etree.SubElement(idtag, 'PrvtId')
-            prvtid.append(emit_id_tag(self.ics, 'scheme_id'))
+            prvtid.append(emit_id_tag(ics, 'scheme_id'))
             return idtag
         setattr(IdHolder, 'emit_scheme_id_tag', emit_scheme_id_tag)
 
