@@ -341,7 +341,7 @@ sct_transaction_attr_dict = {'allowed_args' : sct_allowed_args,
 
 sdd_allowed_args = ('eeid', 'amount', 'rum', 'signature_date', 'old_rum',
                     'debtor', 'account', 'old_account', 'bic', 'old_bic',
-                    'ultimate_debtor', 'payment_seq', 'payment_id'
+                    'ultimate_debtor', 'payment_seq', 'payment_id',
                     'register_eeid_function', 'payment', 'creditor')
 
 def sdd_perform_checks(self):
