@@ -4,19 +4,20 @@
 This module deals with the information related to a single transaction.
 """
 
-__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
-__license__ = '3-clause BSD'
-
-from lxml import etree
-from datetime import datetime, date
+import sys
 from decimal import Decimal
+from datetime import datetime
+from lxml import etree
 from .util import AttributeCarrier, booltext
 from .bank import Bank
 from .account import Account
-from .entity import IdHolder, emit_id_tag
+from .entity import IdHolder
 from .cbibon_dom import TransferInfo, PayerIBANInfo, PayeeIBANInfo, \
-    PayerInfo, PayeeInfo, PayeeAddress, PurposeInfo, StatusRequest
-import sys
+    PayerInfo, PayeeInfo, PurposeInfo, StatusRequest
+
+__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
+__license__ = '3-clause BSD'
+
 
 if sys.version_info[0] >= 3:
     # pylint: disable=redefined-builtin
@@ -52,7 +53,11 @@ class Mandate(AttributeCarrier):
         super(Mandate, self).__init__(**kwargs)
 
     def perform_checks(self):
-        "Check argument lengths."
+        """
+        Check argument lengths.
+        """
+        # pylint: disable=access-member-before-definition
+        # pylint: disable=attribute-defined-outside-init
         if hasattr(self, 'rum'):
             self.max_length('rum', 35)
 
@@ -66,8 +71,9 @@ class Mandate(AttributeCarrier):
 
     def emit_tag(self):
         """
-        Returns the XML tag for the mandate
+        Returns the XML tag for the mandate.
         """
+        # pylint: disable=no-member
         if hasattr(self, 'old_rum') or hasattr(self, 'creditor')  or \
         hasattr(self, 'old_account') or hasattr(self, 'old_bank'):
             self.amendment = True
@@ -113,18 +119,25 @@ class Transaction(AttributeCarrier):
     Transaction describes a single credit transfer from the debtor's account
     (specified in the global payment data) to a creditor account.
     """
-    # pylint: disable=no-member
 
     def __init__(self, *args, **kwargs):
         self.eeid_registered = False
         super(Transaction, self).__init__(*args, **kwargs)
 
     def gen_id(self):
-        "Generate a sequential ID, if not supplied, for the `InstrId` element."
+        """
+        Generate a sequential ID, if not supplied, for the `InstrId` element.
+        """
+        # pylint: disable=attribute-defined-outside-init
+        # pylint: disable=no-member
         self.tx_id = str(self.payment_seq)
 
     def gen_eeid(self):
-        "Generate a unique ID for the `EndToEndId` element."
+        """
+        Generate a unique ID for the `EndToEndId` element.
+        """
+        # pylint: disable=attribute-defined-outside-init
+        # pylint: disable=no-member
         self.eeid = '%s-%06d' % (self.payment_id, self.payment_seq)
 
 # SCT Mode atteributes and methods
@@ -136,7 +149,9 @@ sct_allowed_args = (
     'register_eeid_function', 'payment', 'cbi_purpose')
 
 def sct_perform_checks(self):
-    "Check lengths and types for the attributes."
+    """
+    Check lengths and types for the attributes.
+    """
     # pylint: disable=access-member-before-definition
     # pylint: disable=attribute-defined-outside-init
     if not hasattr(self, 'tx_id'):
@@ -181,6 +196,7 @@ def sct_emit_tag(self):
     """
     Returns the XML tag for the transaction.
     """
+    # pylint: disable=no-member
     root = etree.Element('CdtTrfTxInf')
     pmtid = etree.SubElement(root, 'PmtId')
     etree.SubElement(pmtid, 'InstrId').text = self.tx_id
@@ -291,7 +307,7 @@ def sct_rmt_cbi_records(self, prog):
             start = 0
             while start < len(self.rmtinfo):
                 records += [self.rmtinfo_record('60', prog,
-                    self.rmtinfo[start:start+90]).format()]
+                                                self.rmtinfo[start:start+90]).format()]
     else:
         record_type = '60'
         if len(self.docs) <= 3:
@@ -323,14 +339,15 @@ sct_transaction_attr_dict = {'allowed_args' : sct_allowed_args,
 
 # SDD Mode atteributes and methods
 
-sdd_allowed_args = ('eeid', 'amount', 'rum', 'signature_date', 'old_rum', 'debtor', 'account',
-                            'old_account','bic', 'old_bic',
-                            'ultimate_debtor','payment_seq',
-                            'payment_id','register_eeid_function',
-                            'payment', 'creditor')
+sdd_allowed_args = ('eeid', 'amount', 'rum', 'signature_date', 'old_rum',
+                    'debtor', 'account', 'old_account', 'bic', 'old_bic',
+                    'ultimate_debtor', 'payment_seq', 'payment_id'
+                    'register_eeid_function', 'payment', 'creditor')
 
 def sdd_perform_checks(self):
-    "Checks the validity of all supplied attributes."
+    """
+    Checks the validity of all supplied attributes.
+    """
     if not hasattr(self, 'eeid'):
         self.gen_eeid()
     self.max_length('eeid', 35)
@@ -385,6 +402,8 @@ def sdd_emit_tag(self):
     """
     Returns the XML tag for the transaction.
     """
+    # pylint: disable=no-member
+
     root = etree.Element('DrctDbtTxInf')
     # Transaction ID
     pmtid = etree.SubElement(root, 'PmtId')

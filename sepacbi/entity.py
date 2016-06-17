@@ -4,11 +4,11 @@
 Bank accounts.
 """
 
+from lxml import etree
+from .util import AttributeCarrier
+
 __copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
 __license__ = '3-clause BSD'
-
-from .util import AttributeCarrier
-from lxml import etree
 
 
 class MissingCUCError(Exception):
@@ -41,7 +41,9 @@ class Address(AttributeCarrier):
         self.lines = args
 
     def perform_checks(self):
-        "Check the length of each line."
+        """
+        Check the length of each line.
+        """
         line_count = len(self.lines)
         if line_count < 1 or line_count > 2:
             raise AddressFormatError('Must have either 1 or 2 address lines')
@@ -51,7 +53,10 @@ class Address(AttributeCarrier):
                                          'between 1 and 70 characters')
 
     def emit_tag(self):
-        "Emit the postal address with each of its lines."
+        """
+        Emit the postal address with each of its lines.
+        """
+        # pylint: disable=no-member
         root = etree.Element('PstlAdr')
         for line in self.lines:
             etree.SubElement(root, 'AdrLine').text = line
@@ -59,7 +64,10 @@ class Address(AttributeCarrier):
 
 
 def emit_id_tag(id_code, id_type=None):
-    'Emit a single ID subtree, with root <Othr>.'
+    """
+    Emit a single ID subtree, with root <Othr>.
+    """
+    # pylint: disable=no-member
     othr = etree.Element('Othr')
     id_tag = etree.SubElement(othr, 'Id')
     id_tag.text = id_code
@@ -73,7 +81,6 @@ def emit_id_tag(id_code, id_type=None):
 
 
 class IdHolder(AttributeCarrier):
-    # pylint: disable=no-member
     """
     Describes an Initiator.
     Must have a CUC; may have an Italian tax code.
@@ -86,12 +93,14 @@ class IdHolder(AttributeCarrier):
 #SCT Mode attributes and methods
 
 sct_allowed_args = ('name', 'cf', 'code', 'private', 'cuc',
-                          'address', 'country', 'sia_code')
+                    'address', 'country', 'sia_code')
 
 def sct_perform_checks(self):
     # pylint: disable=access-member-before-definition
     # pylint: disable=attribute-defined-outside-init
-    "Check argument lengths."
+    """
+    Check argument lengths.
+    """
     if hasattr(self, 'name'):
         self.max_length('name', 70)
     if hasattr(self, 'cf'):
@@ -111,6 +120,7 @@ def sct_emit_tag(self, tag=None, as_initiator=False):
     Emit a subtree for an entity, using the supplied tag for the root
     element. If the identity is the Initiator's, emit the CUC as well.
     """
+    # pylint: disable=no-member
     if as_initiator:
         tag = 'InitgPty'
     root = etree.Element(tag)
@@ -163,7 +173,9 @@ sdd_allowed_args = ('name', 'old_name', 'private', 'identifier',
 def sdd_perform_checks(self):
     # pylint: disable=access-member-before-definition
     # pylint: disable=attribute-defined-outside-init
-    "Check argument lengths."
+    """
+    Check argument lengths.
+    """
     if hasattr(self, 'name'):
         self.max_length('name', 70)
 
@@ -192,6 +204,7 @@ def sdd_emit_tag(self, tag=None):
     Emit a subtree for an entity, using the supplied tag for the root
     element.
     """
+    # pylint: disable=no-member
 
     root = etree.Element(tag)
 
@@ -223,6 +236,7 @@ def sdd_emit_scheme_id_tag(self, ics):
     """
     For a creditor, emits the scheme id tag
     """
+    # pylint: disable=no-member
     if not hasattr(self, 'ics'):
         raise MissingICSError
     idtag = etree.Element('Id')

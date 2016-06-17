@@ -5,11 +5,11 @@ This module provides a base class for the attribute-carrying objects
 and other common utility functions.
 """
 
-__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
-__license__ = '3-clause BSD'
-
 from warnings import warn
 import sys
+
+__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
+__license__ = '3-clause BSD'
 
 
 if sys.version_info[0] >= 3:
@@ -58,7 +58,9 @@ class AttributeCarrier(object):
         return self.emit_tag(*args, **kwargs)
 
     def max_length(self, attribute_name, length, obj=None):
-        "Check that an attribute fits into the field length."
+        """
+        Check that an attribute fits into the field length.
+        """
         if obj is None:
             obj = self
         value = unicode(getattr(obj, attribute_name))
@@ -72,7 +74,9 @@ class AttributeCarrier(object):
             setattr(obj, attribute_name, value)
 
     def length(self, attribute_name, length):
-        "Check that an attribute has exactly the specified length."
+        """
+        Check that an attribute has exactly the specified length.
+        """
         value = unicode(getattr(self, attribute_name))
         if len(value) != length:
             raise Exception(
@@ -81,7 +85,9 @@ class AttributeCarrier(object):
         setattr(self, attribute_name, value)
 
 def booltext(param):
-    "Returns a string suitable to represent a boolean value in a XML file."
+    """
+    Returns a string suitable to represent a boolean value in a XML file.
+    """
     if param:
         return 'true'
     else:

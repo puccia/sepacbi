@@ -4,11 +4,8 @@
 This module emits the root tag for the credit transfer.
 """
 
-__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
-__license__ = '3-clause BSD'
-
 import sys
-
+from datetime import date, datetime
 from lxml import etree
 from .util import AttributeCarrier, booltext
 from .entity import IdHolder
@@ -16,7 +13,11 @@ from .account import Account
 from .bank import Bank
 from .transaction import Transaction, MissingBICError
 from .cbibon_dom import PCRecord, EFRecord
-from datetime import date, datetime
+
+__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
+__license__ = '3-clause BSD'
+
+
 
 if sys.version_info[0] >= 3:
     # pylint: disable=redefined-builtin
@@ -49,7 +50,6 @@ class SequenceTypeError(Exception):
     """
 
 class Payment(AttributeCarrier):
-    # pylint: disable=no-member
     # pylint: disable=attribute-defined-outside-init
     # pylint: disable=access-member-before-definition
     """
@@ -66,17 +66,24 @@ class Payment(AttributeCarrier):
         super(Payment, self).__init__(**kwargs)
 
     def add_eeid(self, txid):
-        "Add a transaction's end-to-end ID to check for uniqueness."
+        """
+        Add a transaction's end-to-end ID to check for uniqueness.
+        """
         if txid in self.eeid_set:
             raise InvalidEndToEndIDError('Duplicate end-to-end ID: %r' % txid)
         self.eeid_set.add(txid)
 
     def gen_id(self):
-        """Generate a unique ID for the payment"""
+        """
+        Generate a unique ID for the payment
+        """
         self.req_id = '%s%s' % (self.ID_PREFIX, datetime.now().strftime(
             '%Y%m%d-%H%M%S'))
 
     def amount_sum(self):
+        """
+        Return the sum of the transactions amounts.
+        """
         return sum([tx.amount for tx in self.transactions])
 
     def xml(self):
@@ -89,6 +96,7 @@ class Payment(AttributeCarrier):
         """
         Return the XML structure as a string.
         """
+        # pylint: disable=no-member
         return etree.tostring(self.xml(), **kwargs)
 
 # SCT Mode Payment attrributes and methods
@@ -108,7 +116,10 @@ def sct_get_initiator(self):
         return self.debtor
 
 def sct_add_transaction(self, **kwargs):
-    "Adds a transaction to the internal list. Does not return anything."
+    """
+    Adds a transaction to the internal list. Does not return anything.
+    """
+    # pylint: disable=no-member
     kwargs['payment_seq'] = len(self.transactions)+1
     if not hasattr(self, 'req_id'):
         self.gen_id()
@@ -120,7 +131,9 @@ def sct_add_transaction(self, **kwargs):
     self.transactions.append(txr)
 
 def sct_perform_checks(self):
-    "Checks the validity of all supplied attributes."
+    """
+    Checks the validity of all supplied attributes.
+    """
     if not hasattr(self, 'req_id'):
         self.gen_id()
     self.max_length('req_id', 35)
@@ -161,6 +174,7 @@ def sct_get_xml_root(self):
     pick a different outer structure according to the value of the
     `envelope` attribute.
     """
+    # pylint: disable=no-member
     xsi = 'http://www.w3.org/2001/XMLSchema-instance'
     if self.envelope:
         tag = 'CBIBdyPaymentRequest'
@@ -180,7 +194,10 @@ def sct_get_xml_root(self):
     return outer, root
 
 def sct_emit_tag(self):
-    "Returns the whole XML structure for the payment."
+    """
+    Returns the whole XML structure for the payment.
+    """
+    # pylint: disable=no-member
     # Outer XML structure
     outer, root = self.get_xml_root()
     xmlns = 'urn:CBI:xsd:CBIPaymentRequest.00.04.00'
@@ -299,8 +316,8 @@ sct_payment_attr_dict = {'allowed_args' : sct_allowed_args,
 # SDD Mode attributes and methods
 
 sdd_allowed_args = ('msg_id', 'initiator', 'req_id', 'sequence_type',
-                        'collection_date', 'creditor', 'account', 'bic',
-                        'ultimate_creditor')
+                    'collection_date', 'creditor', 'account', 'bic',
+                    'ultimate_creditor')
 
 allowed_sequence_types = ('OOFF', 'FRST', 'RCUR', 'FNAL')
 
@@ -314,7 +331,10 @@ def sdd_get_initiator(self):
         return self.creditor
 
 def sdd_add_transaction(self, **kwargs):
-    "Adds a transaction to the internal list. Does not return anything."
+    """
+    Adds a transaction to the internal list. Does not return anything.
+    """
+    # pylint: disable=no-member
     kwargs['payment_seq'] = len(self.transactions)+1
     if not hasattr(self, 'req_id'):
         self.gen_id()
@@ -328,7 +348,9 @@ def sdd_add_transaction(self, **kwargs):
     self.transactions.append(txr)
 
 def sdd_perform_checks(self):
-    "Checks the validity of all supplied attributes."
+    """
+    Checks the validity of all supplied attributes.
+    """
     if not hasattr(self, 'msg_id'):
         self.gen_id()
     self.max_length('msg_id', 35)
@@ -367,9 +389,12 @@ def sdd_perform_checks(self):
         assert isinstance(self.ultimate_creditor, IdHolder)
 
 def sdd_emit_tag(self):
-    """Returns the whole XML structure for the payment."""
+    """
+    Returns the whole XML structure for the payment.
+    """
+    # pylint: disable=no-member
     root = etree.Element('Document', nsmap={None : "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
-                                        'xsi' : "http://www.w3.org/2001/XMLSchema-instance"})
+                                            'xsi' : "http://www.w3.org/2001/XMLSchema-instance"})
     cstmrdrctdtinitn = etree.SubElement(root, 'CstmrDrctDbtInitn')
 
     # Group Header

@@ -5,12 +5,12 @@
 Bank class.
 """
 
+import re
+from lxml import etree
+from .util import AttributeCarrier
+
 __copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
 __license__ = '3-clause BSD'
-
-from .util import AttributeCarrier
-from lxml import etree
-import re
 
 ABI_RE = re.compile(r'\d{5}')
 
@@ -23,7 +23,9 @@ class Bank(AttributeCarrier):
     allowed_args = ('bic', 'abi')
 
     def perform_checks(self):
-        'Checks that the BIC or the ABI are present, and that they are valid.'
+        """
+        Checks that the BIC or the ABI are present, and that they are valid.
+        """
         if hasattr(self, 'bic'):
             code_length = len(self.bic)
             # TODO: more formal checks (ISO 9362)
@@ -32,7 +34,9 @@ class Bank(AttributeCarrier):
             assert ABI_RE.match(self.abi) is not None
 
     def emit_tag(self, output_abi=False):
-        "Returns a XML tree for the bank, optionally providing the ABI code."
+        """
+        Returns a XML tree for the bank, optionally providing the ABI code.
+        """
         root = etree.Element('FinInstnId')
         if hasattr(self, 'bic'):
             etree.SubElement(root, 'BIC').text = self.bic

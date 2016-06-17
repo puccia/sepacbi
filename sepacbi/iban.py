@@ -4,18 +4,20 @@
 This module deals with IBAN codes and formal validity checks.
 """
 
-__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
-__license__ = '3-clause BSD'
-
 import re
 from .iban_structures import IBAN_STRUCTURES
+
+__copyright__ = 'Copyright (c) 2014 Emanuele Pucciarelli, C.O.R.P. s.n.c.'
+__license__ = '3-clause BSD'
 
 # Identifies a single element of the IBAN structure
 STR_ITEM_RE = re.compile(r'^(\d+)(!?)([nac])')
 
 
 class InvalidIBANError(Exception):
-    "Raised when an IBAN does not pass the formal checks."
+    """
+    Raised when an IBAN does not pass the formal checks.
+    """
     pass
 
 
@@ -69,7 +71,9 @@ COUNTRY_RE = dict([(x[:2], structure_to_re(x))
 
 
 def validate_check_digits(iban):
-    "Validate the check digits of an IBAN."
+    """
+    Validate the check digits of an IBAN.
+    """
     iban = iban[4:] + iban[:4]
 
     converted = int(''.join(str(int(ch, 36)) for ch in iban))
@@ -79,7 +83,9 @@ def validate_check_digits(iban):
 
 
 def validate(iban):
-    "Validate the structure and the check digits of an IBAN."
+    """
+    Validate the structure and the check digits of an IBAN.
+    """
 
     # Do we know the country?
     country = iban[:2]
