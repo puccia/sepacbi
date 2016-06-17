@@ -232,7 +232,7 @@ def sdd_emit_tag(self, tag=None):
         etree.SubElement(root, 'CtryOfRes').text = self.country
     return root
 
-def sdd_emit_scheme_id_tag(self, ics):
+def sdd_emit_scheme_id_tag(self, mode=None):
     """
     For a creditor, emits the scheme id tag
     """
@@ -241,7 +241,12 @@ def sdd_emit_scheme_id_tag(self, ics):
         raise MissingICSError
     idtag = etree.Element('Id')
     prvtid = etree.SubElement(idtag, 'PrvtId')
-    prvtid.append(emit_id_tag(ics, 'scheme_id'))
+    if mode is 'old':
+        if not hasattr(self, 'old_ics'):
+            raise MissingICSError("The old ICS is needed here")
+        prvtid.append(emit_id_tag(self.old_ics, 'scheme_id'))
+    else:
+        prvtid.append(emit_id_tag(self.ics, 'scheme_id'))
     return idtag
 
 sdd_idholder_attr_dict = {'allowed_args' : sdd_allowed_args,
