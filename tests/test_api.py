@@ -12,12 +12,14 @@ from sepacbi.iban import InvalidIBANError
 
 from .definitions import *
 
-Payment = SctFactory.get_payment()
-Transaction = SctFactory.get_transaction()
-IdHolder = SctFactory.get_id_holder()
+# Payment = SctFactory.get_payment()
+# Transaction = SctFactory.get_transaction()
+# IdHolder = SctFactory.get_id_holder()
 
 def test_empty_payment():
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     "Payments without any transaction must raise an exception."
     with pytest.raises(NoTransactionsError):
         payment = Payment(
@@ -30,7 +32,9 @@ def test_empty_payment():
 
 
 def test_missing_attrs_payment():
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     "Payments must always have a `debtor` and an `account` attribute."
     payment = Payment()
     with pytest.raises(AttributeError):
@@ -69,7 +73,9 @@ def test_missing_attr_transaction():
     Transactions must always have `amount`, `account`, `rmtinfo`,
     `creditor`.
     """
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     basic_data = {
         'amount': 1,
         'account': acct_86,
@@ -88,8 +94,10 @@ def test_missing_attr_transaction():
 
 
 def test_missing_CUC():
-
     "The `debtor` entity must always have a CUC."
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = Payment(debtor=biz, account=acct_37)
     payment.add_transaction(amount=1, account=acct_86, creditor=biz,
                             rmtinfo='Test')
@@ -99,7 +107,9 @@ def test_missing_CUC():
 
 def test_wrong_address_format():
     "Address must be a list or tuple of at most two lines."
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     holder = IdHolder(
         name='Test Business S.P.A.', cf='12312312311',
         country='IT', address=['Xyz', 'Via Giuseppe Verdi, 15', '33100 Udine'],
@@ -121,7 +131,9 @@ def test_wrong_address_format():
 
 def test_missing_abi():
     "If the debtor has a foreign account, the ABI must be supplied."
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = Payment(debtor=biz_with_cuc, account=foreign_acct)
     payment.add_transaction(amount=1, account=acct_86, rmtinfo='Test')
     with pytest.raises(MissingABIError):
@@ -130,7 +142,9 @@ def test_missing_abi():
 
 def test_missing_bic():
     "If the creditor has a foreign account, the BIC must be supplied."
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = simple_payment()
     with pytest.raises(MissingBICError):
         payment.add_transaction(amount=1, account=foreign_acct, creditor=biz,
@@ -138,7 +152,9 @@ def test_missing_bic():
 
 
 def test_invalid_iban():
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = Payment(debtor=biz_with_cuc, account='ITINVALIDIBAN')
     with pytest.raises(InvalidIBANError):
         payment.xml()
@@ -166,7 +182,9 @@ def test_invalid_docs():
 
 
 def test_dup_e2eid():
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = simple_payment()
     payment.add_transaction(amount=1, creditor=alpha, account=acct_37,
                             eeid='Test1', rmtinfo='A')

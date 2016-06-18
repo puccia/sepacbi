@@ -199,7 +199,7 @@ def sdd_perform_checks(self):
     if hasattr(self, 'country'):
         self.length('country', 2)
 
-def sdd_emit_tag(self, tag=None):
+def sdd_emit_tag(self, tag):
     """
     Emit a subtree for an entity, using the supplied tag for the root
     element.

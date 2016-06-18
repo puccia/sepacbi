@@ -6,10 +6,6 @@ from datetime import datetime, date
 
 from lxml import etree
 
-Payment = SctFactory.get_payment()
-Transaction = SctFactory.get_transaction()
-IdHolder = SctFactory.get_id_holder()
-
 PYTHON3 = False
 if sys.version_info[0] >= 3:
     PYTHON3 = True
@@ -32,7 +28,9 @@ def compare_cbi(text, filename, save=False):
 
 
 def test_payment_basic():
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = Payment(debtor=biz_with_sia, account=acct_37, req_id='StaticId',
                       execution_date=date(2014, 5, 15))
     payment.add_transaction(amount=198.25, account=acct_86, creditor=beta,
@@ -41,7 +39,9 @@ def test_payment_basic():
 
 
 def test_payment_multitrans():
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = Payment(debtor=biz_with_sia, account=acct_37, req_id='StaticId',
                       execution_date=date(2014, 5, 15))
     payment.add_transaction(amount=198.25, account=acct_86, creditor=beta,
@@ -62,7 +62,9 @@ def test_payment_multitrans():
 
 
 def test_payment_misc_features():
-
+    Payment = SctFactory.get_payment()
+    Transaction = SctFactory.get_transaction()
+    IdHolder = SctFactory.get_id_holder()
     payment = Payment(
         debtor=biz, account=acct_37, req_id='StaticId',
         execution_date=date(2014, 5, 15),
