@@ -87,12 +87,11 @@ class TestEmitSchemeIdTag(TestCase):
         Check that the MissingICSError exception
         is raised when a creditor has no ICS code.
         """
-        with self.assertRaises(MissingICSError):
-            self.creditor.emit_scheme_id_tag()
+        self.assertRaises(MissingICSError, self.creditor.emit_scheme_id_tag)
 
         self.creditor.ics = "FR00ZZ123456"
-        with self.assertRaises(MissingICSError):
-            self.creditor.emit_scheme_id_tag(mode='old')
+        self.assertRaises(MissingICSError, self.creditor.emit_scheme_id_tag,
+                          mode='old')
 
     def test_ics_scheme_id(self):
         """
