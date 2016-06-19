@@ -2,14 +2,13 @@
 """Contain test classes for the SDD mode IdHolder class"""
 
 from unittest import TestCase
-from types import FunctionType
 from lxml import etree
 from sepacbi import SddFactory
 from sepacbi.entity import MissingICSError, Address
 
 # pylint: disable=no-member
 
-class TestEmitTag(TestCase):
+class TestEmitIdHolderTag(TestCase):
     """
     Test class for the emit_tag() method.
     """
