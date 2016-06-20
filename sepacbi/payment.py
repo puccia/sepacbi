@@ -351,13 +351,14 @@ def sdd_perform_checks(self):
     """
     Checks the validity of all supplied attributes.
     """
-    if not hasattr(self, 'msg_id'):
-        self.gen_id()
-    self.max_length('msg_id', 35)
-
     if not hasattr(self, 'req_id'):
         self.gen_id()
     self.max_length('req_id', 35)
+
+
+    if not hasattr(self, 'msg_id'):
+        self.msg_id = self.req_id
+    self.max_length('msg_id', 35)
 
     if hasattr(self, 'initiator'):
         assert isinstance(self.initiator, IdHolder)
