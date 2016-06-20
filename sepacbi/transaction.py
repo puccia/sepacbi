@@ -103,14 +103,14 @@ class Mandate(AttributeCarrier):
                 if hasattr(self.creditor, 'old_name'):
                     etree.SubElement(orgnlcdtrschmeid, 'Nm').text = self.creditor.old_name
                 if hasattr(self.creditor, 'old_ics'):
-                    orgnlcdtrschmeid.append(self.creditor.emit_scheme_id_tag(self.creditor.old_ics))
+                    orgnlcdtrschmeid.append(self.creditor.emit_scheme_id_tag(mode='old'))
 
             if hasattr(self, 'old_account'):
                 amdmntinfdtls.append(self.old_account.__tag__('OrgnlDbtrAcct'))
 
             if hasattr(self, 'old_bank'):
                 orgnldbtragt = etree.SubElement(amdmntinfdtls, 'OrgnlDbtrAgt')
-                orgnldbtragt.append(self.old_bank.__tag__())
+                orgnldbtragt.append(self.old_bank.__tag__(mode='old'))
         return root
 
 

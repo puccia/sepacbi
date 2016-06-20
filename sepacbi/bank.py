@@ -33,13 +33,17 @@ class Bank(AttributeCarrier):
         if hasattr(self, 'abi'):
             assert ABI_RE.match(self.abi) is not None
 
-    def emit_tag(self, output_abi=False):
+    def emit_tag(self, output_abi=False, mode=None):
         """
         Returns a XML tree for the bank, optionally providing the ABI code.
         """
         root = etree.Element('FinInstnId')
         if hasattr(self, 'bic'):
-            etree.SubElement(root, 'BIC').text = self.bic
+            if mode is 'old':
+                other = etree.SubElement(root, 'Othr')
+                etree.SubElement(other, 'Id').text = self.bic
+            else:
+                etree.SubElement(root, 'BIC').text = self.bic
         if output_abi:
             clearing = etree.SubElement(root, 'ClrSysMmbId')
             etree.SubElement(clearing, 'MmbId').text = self.abi
