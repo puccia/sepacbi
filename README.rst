@@ -1,6 +1,6 @@
 .. image:: https://travis-ci.org/yhillion/sepacbi.svg?branch=sdd-support
     :target: https://travis-ci.org/yhillion/sepacbi
-.. image:: https://landscape.io/github/yhillion/sepacbi/sdd-support/landscape.svg?style=plastic
+.. image:: https://landscape.io/github/yhillion/sepacbi/sdd-support/landscape.svg?style=flat
    :target: https://landscape.io/github/yhillion/sepacbi/sdd-support
    :alt: Code Health
 
