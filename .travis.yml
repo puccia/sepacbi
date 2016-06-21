@@ -17,7 +17,7 @@ matrix:
         - env: TOXENV=docs
 
 install:
-    - travis_retry pip install "virtualenv<14.0.0" "tox>=1.9
+    - pip install tox
 
 script:
     - tox
