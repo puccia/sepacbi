@@ -5,8 +5,8 @@ from unittest import TestCase
 from datetime import date, datetime
 from lxml import etree
 from sepacbi import SddFactory
-from sepacbi.bank import Bank
-from sepacbi.account import Account
+from sepacbi.payment import NoTransactionsError, SequenceTypeError
+from sepacbi.transaction import MissingBICError
 from .test_xml_output import canonicalize_xml
 
 # pylint: disable=no-member
@@ -38,7 +38,7 @@ class TestXmlOutput(TestCase):
                                      rum='RUM-TEST-1', signature_date='2016-03-01',
                                      debtor=self.first_debtor, bic='IJKLMNOP',
                                      account='FR6454953003783660511800042')
-        self.payment.add_transaction(eeid='EEID-2-TEST', amount='789.10',
+        self.payment.add_transaction(amount='789.10',
                                      rum='RUM-TEST-2', signature_date='2016-04-01',
                                      old_rum='RUM-TEST-3', debtor=second_debtor,
                                      account='FR8837788964072660207500037',
@@ -221,6 +221,7 @@ class TestXmlOutput(TestCase):
                       b'</PmtInf>' +\
                      b'</CstmrDrctDbtInitn>' +\
                     b'</Document>'
+        self.payment.transactions[1].eeid = 'EEID-2-TEST'
         to_check_tag = self.payment.xml_text()
         self.assertEqual(canonicalize_xml(valid_tag), canonicalize_xml(to_check_tag))
 
@@ -342,5 +343,172 @@ class TestXmlOutput(TestCase):
                           'collection_date', 'ultimate_creditor')
         list([delattr(self.payment, attr) for attr in to_delete_attr])
         to_check_tag = self.payment.xml_text()
-        print(canonicalize_xml(valid_tag))
         self.assertEqual(canonicalize_xml(valid_tag), canonicalize_xml(to_check_tag))
+
+    def test_xml_text_no_transaction_gen_id(self):
+        """
+        Check that the the xml output for the payment is valid.
+        eeid not provided.
+        """
+        valid_tag = b'<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.02">' +\
+                     b'<CstmrDrctDbtInitn>' +\
+                      b'<GrpHdr>' +\
+                       b'<MsgId>MSG-ID-TEST</MsgId>' +\
+                       b'<CreDtTm>2016-06-17T09:52:52.358529</CreDtTm>' +\
+                       b'<NbOfTxs>1</NbOfTxs>' +\
+                       b'<CtrlSum>1234.56</CtrlSum>' +\
+                       b'<InitgPty>' +\
+                        b'<Nm>INITIATOR NAME</Nm>' +\
+                       b'</InitgPty>' +\
+                      b'</GrpHdr>' +\
+                      b'<PmtInf>' +\
+                       b'<PmtInfId>DistintaXml-20160620-172835</PmtInfId>' +\
+                       b'<PmtMtd>DD</PmtMtd>' +\
+                       b'<PmtTpInf>' +\
+                        b'<SvcLvl>' +\
+                         b'<Cd>SEPA</Cd>' +\
+                        b'</SvcLvl>' +\
+                        b'<LclInstrm>' +\
+                         b'<Cd>CORE</Cd>' +\
+                        b'</LclInstrm>' +\
+                        b'<SeqTp>FRST</SeqTp>' +\
+                       b'</PmtTpInf>' +\
+                       b'<ReqdColltnDt>2016-06-20</ReqdColltnDt>' +\
+                       b'<Cdtr>' +\
+                        b'<Nm>CREDITOR NAME</Nm>' +\
+                        b'<PstlAdr>' +\
+                         b'<AdrLine>Addr Line 1</AdrLine>' +\
+                         b'<AdrLine>Addr Line 2</AdrLine>' +\
+                        b'</PstlAdr>' +\
+                        b'<CtryOfRes>FR</CtryOfRes>' +\
+                       b'</Cdtr>' +\
+                       b'<CdtrAcct>' +\
+                        b'<Id>' +\
+                         b'<IBAN>FR2115583793123088059006193</IBAN>' +\
+                        b'</Id>' +\
+                       b'</CdtrAcct>' +\
+                       b'<CdtrAgt>' +\
+                        b'<FinInstnId>' +\
+                         b'<BIC>ABCDEFGH</BIC>' +\
+                        b'</FinInstnId>' +\
+                       b'</CdtrAgt>' +\
+                       b'<UltmtCdtr>' +\
+                        b'<Nm>ULTIMATE CREDITOR NAME</Nm>' +\
+                        b'<Id>' +\
+                         b'<OrgId>' +\
+                          b'<Othr>' +\
+                           b'<Id>ID-TEST</Id>' +\
+                          b'</Othr>' +\
+                         b'</OrgId>' +\
+                        b'</Id>' +\
+                       b'</UltmtCdtr>' +\
+                       b'<ChrgBr>SLEV</ChrgBr>' +\
+                       b'<CdtrSchmeId>' +\
+                        b'<Id>' +\
+                         b'<PrvtId>' +\
+                          b'<Othr>' +\
+                           b'<Id>FR00ZZ123456</Id>' +\
+                           b'<SchmeNm>' +\
+                            b'<Prtry>SEPA</Prtry>' +\
+                           b'</SchmeNm>' +\
+                          b'</Othr>' +\
+                         b'</PrvtId>' +\
+                        b'</Id>' +\
+                       b'</CdtrSchmeId>' +\
+                        b'<DrctDbtTxInf>' +\
+                         b'<PmtId>' +\
+                          b'<EndToEndId>DistintaXml-20160620-172835</EndToEndId>' +\
+                         b'</PmtId>' +\
+                         b'<InstdAmt Ccy="EUR">1234.56</InstdAmt>' +\
+                         b'<DrctDbtTx>' +\
+                          b'<MndtRltdInf>' +\
+                           b'<MndtId>RUM-TEST-1</MndtId>' +\
+                           b'<DtOfSgntr>2016-03-01</DtOfSgntr>' +\
+                           b'<AmdmntInd>true</AmdmntInd>' +\
+                           b'<AmdmntInfDtls>' +\
+                            b'<OrgnlCdtrSchmeId>' +\
+                             b'<Nm>OLD CREDITOR NAME</Nm>' +\
+                             b'<Id>' +\
+                              b'<PrvtId>' +\
+                               b'<Othr>' +\
+                                b'<Id>FR00ZZ654321</Id>' +\
+                                b'<SchmeNm>' +\
+                                 b'<Prtry>SEPA</Prtry>' +\
+                                b'</SchmeNm>' +\
+                               b'</Othr>' +\
+                              b'</PrvtId>' +\
+                             b'</Id>' +\
+                            b'</OrgnlCdtrSchmeId>' +\
+                           b'</AmdmntInfDtls>' +\
+                          b'</MndtRltdInf>' +\
+                         b'</DrctDbtTx>' +\
+                         b'<DbtrAgt>' +\
+                          b'<FinInstnId>' +\
+                           b'<BIC>IJKLMNOP</BIC>' +\
+                          b'</FinInstnId>' +\
+                         b'</DbtrAgt>' +\
+                         b'<Dbtr>' +\
+                          b'<Nm>DEBTOR ONE NAME</Nm>' +\
+                         b'</Dbtr>' +\
+                         b'<DbtrAcct>' +\
+                          b'<Id>' +\
+                           b'<IBAN>FR6454953003783660511800042</IBAN>' +\
+                          b'</Id>' +\
+                         b'</DbtrAcct>' +\
+                        b'</DrctDbtTxInf>' +\
+                       b'</PmtInf>' +\
+                      b'</CstmrDrctDbtInitn>' +\
+                     b'</Document>'
+        self.payment.transactions = []
+        self.payment.eeid_set = set()
+        delattr(self.payment, 'req_id')
+        self.payment.add_transaction(amount='1234.56',
+                                     rum='RUM-TEST-1', signature_date='2016-03-01',
+                                     debtor=self.first_debtor, bic='IJKLMNOP',
+                                     account='FR6454953003783660511800042')
+        to_check_tag = self.payment.xml_text()
+        self.assertEqual(canonicalize_xml(valid_tag), canonicalize_xml(to_check_tag))
+
+    def test_xml_text_no_transactions(self):
+        """
+        Check that the the xml output for the payment raises an exception
+        when no transaction is provided
+        """
+        self.payment.transactions = []
+        self.assertRaises(NoTransactionsError, self.payment.xml_text)
+
+    def test_xml_text_no_bic(self):
+        """
+        Check that the the xml output for the payment raises an exception
+        when the bic is not provided
+        """
+        delattr(self.payment, 'bic')
+        self.assertRaises(MissingBICError, self.payment.xml_text)
+
+    def test_xml_text_no_sequence_type(self):
+        """
+        Check that the the xml output for the payment raises an exception
+        when the sequence_type is not provided
+        """
+        delattr(self.payment, 'sequence_type')
+        self.assertRaises(SequenceTypeError, self.payment.xml_text)
+
+    def test_xml_text_wrong_sequence_type(self):
+        """
+        Check that the the xml output for the payment raises an exception
+        when the sequence_type is not wrong
+        """
+        self.payment.sequence_type = 'TEST'
+        self.assertRaises(SequenceTypeError, self.payment.xml_text)
+
+    def test_xml_text_transaction_no_bic(self):
+        """
+        Check that the the xml output for the payment raises an exception
+        when the bic of a transaction is not provided
+        """
+        self.payment.transactions = []
+        self.payment.eeid_set = set()
+        self.assertRaises(MissingBICError, self.payment.add_transaction, amount='1234.56',
+                                     rum='RUM-TEST-1', signature_date='2016-03-01',
+                                     debtor=self.first_debtor,
+                                     account='FR6454953003783660511800042')
