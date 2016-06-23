@@ -219,6 +219,7 @@ class Transaction(AttributeCarrier):
                 while start < len(self.rmtinfo):
                     records += [self.rmtinfo_record('60', prog,
                         self.rmtinfo[start:start+90]).format()]
+                start += 90
         else:
             record_type = '60'
             if len(self.docs) <= 3:
