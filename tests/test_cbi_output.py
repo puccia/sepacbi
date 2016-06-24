@@ -12,7 +12,6 @@ if sys.version_info[0] >= 3:
 
 def canonicalize_cbi(text):
     today = date.today().strftime('%d%m%y')
-    print(today)
     return text.replace('999999', today)
 
 def compare_cbi(text, filename, save=False):
