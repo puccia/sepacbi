@@ -13,6 +13,8 @@ matrix:
         - python: "pypy"
           env: TOXENV=pypy
         - env: TOXENV=docs
+    allow_failures:
+        - python: "pypy"
 
 install:
     - pip install tox
