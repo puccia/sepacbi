@@ -79,6 +79,4 @@ class TestEmitMandateTag(TestCase):
         self.mandate.old_bank = Bank(bic='ABCDEFGH')
         valid_tag = b'<MndtRltdInf><MndtId>RUM-TEST</MndtId><DtOfSgntr>2016-06-20</DtOfSgntr><AmdmntInd>true</AmdmntInd><AmdmntInfDtls><OrgnlDbtrAgt><FinInstnId><Othr><Id>ABCDEFGH</Id></Othr></FinInstnId></OrgnlDbtrAgt></AmdmntInfDtls></MndtRltdInf>'
         to_check_tag = etree.tostring(self.mandate.emit_tag())
-        print(valid_tag)
-        print(to_check_tag)
         self.assertEqual(valid_tag, to_check_tag)
