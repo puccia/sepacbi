@@ -17,8 +17,8 @@ if sys.version_info[0] >= 3:
 
 TIMESTAMP_RE = re.compile(r'<CreDtTm>[-0-9:.T]+</CreDtTm>')
 CANONICAL_TIMESTAMP = '<CreDtTm>' + datetime.now().isoformat() + '</CreDtTm>'
-ALT_TIMESTAMP_RE = re.compile(r'>DistintaXml-+[-0-9]+</')
-ALT_CANONICAL_TIMESTAMP = '>DistintaXml-' + '%s' % (datetime.now().strftime(
+ALT_TIMESTAMP_RE = re.compile(r'[-0-9]+</')
+ALT_CANONICAL_TIMESTAMP = '%s' % (datetime.now().strftime(
     '%Y%m%d-%H%M%S')) + '</'
 
 def canonicalize_xml(xmlstring):
@@ -30,10 +30,8 @@ def canonicalize_xml(xmlstring):
         if hasattr(xmlstring, 'decode'):
             xmlstring = xmlstring.decode(encoding='utf-8')
     string = ALT_TIMESTAMP_RE.sub(ALT_CANONICAL_TIMESTAMP, xmlstring)
-    # print(string)
     tree = etree.fromstring(string)
     string = TIMESTAMP_RE.sub(CANONICAL_TIMESTAMP, string)
-    # print(string)
     tree = etree.fromstring(string)
     return etree.tostring(tree, pretty_print=True)
 

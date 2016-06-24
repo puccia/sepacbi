@@ -261,7 +261,7 @@ class TestXmlOutput(TestCase):
                         b'</LclInstrm>' +\
                         b'<SeqTp>FRST</SeqTp>' +\
                        b'</PmtTpInf>' +\
-                       b'<ReqdColltnDt>2016-06-21</ReqdColltnDt>' +\
+                       b'<ReqdColltnDt>2016-03-01</ReqdColltnDt>' +\
                        b'<Cdtr>' +\
                         b'<Nm>CREDITOR NAME</Nm>' +\
                         b'<PstlAdr>' +\

@@ -11,8 +11,9 @@ if sys.version_info[0] >= 3:
     PYTHON3 = True
 
 def canonicalize_cbi(text):
-    today = date.today().strftime('%d%m%Y')
-    return text.replace(today, '999999')
+    today = date.today().strftime('%d%m%y')
+    print(today)
+    return text.replace('999999', today)
 
 def compare_cbi(text, filename, save=False):
     """
@@ -24,7 +25,7 @@ def compare_cbi(text, filename, save=False):
         open(full_path, 'w').write(canonicalize_cbi(text))
         #raise Exception('saved!')
     file_content = open(full_path, 'r').read()
-    assert text == file_content
+    assert text == canonicalize_cbi(file_content)
 
 
 def test_payment_basic():
