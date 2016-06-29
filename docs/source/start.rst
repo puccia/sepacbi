@@ -1,11 +1,11 @@
 Introduction
 ------------
 
-The `sepacbi` module generates SEPA Credit Transfer requests in the XML format standardized by CBI and accepted by Italian banks.
+The `sepacbi` module generates SEPA Credit Transfer requests in the XML format standardized by CBI and accepted by Italian banks. It can also generate very simple SEPA Direct Debit requests.
 
 It is also capable of generating request streams in the legacy CBI-BON-001 fixed-length record legacy format, but only for domestic credit transfers.
 
-The module does not currently support other requests (such as Direct Debit), nor does it support status changes.
+The module does not currently support other requests (such as B2B), nor does it support status changes.
 
 The development of this module is funded by `Linkspirit`_.
 
@@ -21,7 +21,11 @@ Debtors and creditors are instances of the ``IdHolder`` class.
 
 Here is the generation of a very simple credit transfer request::
 
-	from sepacbi import IdHolder, Payment
+	from sepacbi import SctFactory
+
+	Payment = SdctFactory.get_payment()
+	Transaction = SctFactory.get_transaction()
+	IdHolder = SctFactory.get_id_holder()
 
 	payer = IdHolder(name='Sample Business S.P.A.', cf='12312312311', cuc='0123456A')
 
@@ -34,4 +38,3 @@ Here is the generation of a very simple credit transfer request::
 You will the obtain the generated XML request by invoking::
 
 	payment.xml_text()
-
