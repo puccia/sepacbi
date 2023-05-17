@@ -136,8 +136,11 @@ class IdHolder(AttributeCarrier):
         if hasattr(self, 'code'):
             orgid.append(emit_id_tag(self.code, None))
 
-        if not orgid:
+        if len(orgid) == 0:
             idtag.remove(orgid)
+
+        if len(idtag) == 0:
+            root.remove(idtag)
 
         if not as_initiator and hasattr(self, 'country'):
             etree.SubElement(root, 'CtryOfRes').text = self.country
